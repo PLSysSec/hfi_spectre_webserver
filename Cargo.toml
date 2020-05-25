@@ -8,3 +8,8 @@ edition = "2018"
 
 [dependencies]
 rocket = "0.4.4"
+lucet-runtime-internals = { path = "../lucet-spectre/lucet-runtime/lucet-runtime-internals" }
+lucet-runtime = { path = "../lucet-spectre/lucet-runtime" }
+lucet-wasi = { path = "../lucet-spectre/lucet-wasi" }
+lucet-wiggle = { path = "../lucet-spectre/lucet-wiggle" }
+cranelift-spectre = { path = "../lucet-spectre/wasmtime/cranelift-spectre" }
