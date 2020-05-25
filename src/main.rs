@@ -3,11 +3,13 @@
 #[macro_use] extern crate rocket;
 
 use anyhow::Error;
+use libc::c_char;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
 use rocket::http::RawStr;
 use rocket::response::Stream;
 use rocket::response::content;
 use std::cell::RefCell;
+use std::ffi::CStr;
 use std::io;
 use std::io::Stdin;
 use std::path::PathBuf;
@@ -37,6 +39,7 @@ fn stream() -> Stream<Stdin> {
 pub enum ModuleResult {
     None,
     ByteArray(Vec<u8>),
+    String(String)
 }
 
 thread_local! {
@@ -57,6 +60,20 @@ pub extern "C" fn server_module_bytearr_result(vmctx: &mut Vmctx, byte_arr: u32,
     let v = response_slice.to_vec();
     CURRENT_RESULT.with(|current_result|{
         *current_result.borrow_mut() = ModuleResult::ByteArray(v);
+    });
+}
+
+#[lucet_hostcall]
+#[no_mangle]
+pub extern "C" fn server_module_string_result(vmctx: &mut Vmctx, string_resp: u32) {
+    let heap = vmctx.heap();
+    let byte_arr_ptr = heap.as_ptr() as usize + string_resp as usize;
+    let char_ptr = byte_arr_ptr as *const c_char;
+    let c_str: &CStr = unsafe { CStr::from_ptr(char_ptr) };
+    let str_slice: &str = c_str.to_str().unwrap();
+    let str_buf: String = str_slice.to_owned();  // if necessary
+    CURRENT_RESULT.with(|current_result|{
+        *current_result.borrow_mut() = ModuleResult::String(str_buf);
     });
 }
 
@@ -95,7 +112,35 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
         return r;
     });
     Ok(ret)
+}
 
+#[get("/msghash_check_c?<msg>&<hash>&<protection>")]
+fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<String, Error> {
+
+    let input: Vec<String> = vec!["".to_string(), msg.to_string(), hash.to_string()];
+    let instance = wasm_module::create_wasm_instance("msghash_check_c".to_string(), protection.to_string(), input);
+    CURRENT_RESULT.with(|current_result|{
+        *current_result.borrow_mut() = ModuleResult::None;
+    });
+
+    let result = instance?.run(lucet_wasi::START_SYMBOL, &[])?;
+    if !result.is_returned() {
+        panic!("wasm module yielded?");
+    }
+
+    let ret = CURRENT_RESULT.with(|current_result|{
+        let r = match &*current_result.borrow() {
+            ModuleResult::String(s) => {
+                s.clone()
+            },
+            _ => {
+                panic!("Unexpected response from jpeg module");
+            }
+        };
+        *current_result.borrow_mut() = ModuleResult::None;
+        return r;
+    });
+    Ok(ret)
 }
 
 #[no_mangle]
@@ -115,6 +160,6 @@ fn main() {
     service_directory::load_dir(module_path).unwrap();
 
     rocket::ignite()
-    .mount("/", routes![index, bytes, stream, jpeg_resize_c])
+    .mount("/", routes![index, bytes, stream, jpeg_resize_c, msghash_check_c])
     .launch();
 }

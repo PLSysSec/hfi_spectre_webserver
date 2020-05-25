@@ -1196,6 +1196,7 @@ dependencies = [
  "anyhow",
  "cranelift-spectre",
  "lazy_static",
+ "libc",
  "lucet-runtime",
  "lucet-runtime-internals",
  "lucet-wasi",
