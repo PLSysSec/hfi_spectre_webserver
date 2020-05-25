@@ -1193,7 +1193,9 @@ checksum = "c7cb5678e1615754284ec264d9bb5b4c27d2018577fd90ac0ceb578591ed5ee4"
 name = "spectresfi_webserver"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cranelift-spectre",
+ "lazy_static",
  "lucet-runtime",
  "lucet-runtime-internals",
  "lucet-wasi",

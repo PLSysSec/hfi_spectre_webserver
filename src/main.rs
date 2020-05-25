@@ -2,19 +2,19 @@
 
 #[macro_use] extern crate rocket;
 
+use anyhow::Error;
+use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
 use rocket::http::RawStr;
 use rocket::response::Stream;
 use rocket::response::content;
-
-use lucet_runtime::{DlModule, InstanceHandle, MmapRegion, Region, TerminationDetails, Limits};
-use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
-
 use std::cell::RefCell;
 use std::io;
 use std::io::Stdin;
-use std::os::raw::{c_char};
+use std::path::PathBuf;
 use std::slice;
-use std::slice::from_raw_parts;
+
+mod service_directory;
+mod wasm_module;
 
 #[get("/")]
 fn index() -> &'static str {
@@ -66,50 +66,21 @@ struct JPEGResponder {
     bytes: Vec<u8>,
 }
 
+#[get("/jpeg_resize_c?<quality>&<protection>")]
+fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder, Error> {
 
-#[get("/image")]
-fn image() -> JPEGResponder {
-    let bytes = std::fs::read("/home/shr/Code/SpectreSandboxing/wasm_compartments/modules/jpeg_resize_c/image.jpeg").unwrap();
-    return JPEGResponder {
-        bytes
-    };
-}
-
-#[get("/jpeg_resize_c?<quality>")]
-fn jpeg_resize_c(quality: &RawStr) -> JPEGResponder {
-    let module = DlModule::load("/home/shr/Code/SpectreSandboxing/spectresfi_webserver/modules/jpeg_resize_c_stock.so").unwrap();
-    let wasi_ctx = {
-        let mut builder = lucet_wasi::WasiCtxBuilder::new();
-        // The input to the computation is made available as arguments:
-        let input = vec!["", quality.as_str()];
-        builder.args(input);
-        builder.build().unwrap()
-    };
-    let region = MmapRegion::create(
-        1,
-        &Limits {
-            heap_memory_size: 4 * 1024 * 1024 * 1024,
-            heap_address_space_size: 8 * 1024 * 1024 * 1024,
-            stack_size: 16 * 1024 * 1024,
-            ..Limits::default()
-        }).unwrap();
-
-    let mut instance = region
-        .new_instance_builder(module)
-        .with_embed_ctx(wasi_ctx)
-        .build()
-        .unwrap();
-
+    let input: Vec<String> = vec!["".to_string(), quality.to_string()];
+    let instance = wasm_module::create_wasm_instance("jpeg_resize_c".to_string(), protection.to_string(), input);
     CURRENT_RESULT.with(|current_result|{
         *current_result.borrow_mut() = ModuleResult::None;
     });
 
-    let result = instance.run(lucet_wasi::START_SYMBOL, &[]).unwrap();
+    let result = instance?.run(lucet_wasi::START_SYMBOL, &[])?;
     if !result.is_returned() {
         panic!("wasm module yielded?");
     }
 
-    return CURRENT_RESULT.with(|current_result|{
+    let ret = CURRENT_RESULT.with(|current_result|{
         let r = match &*current_result.borrow() {
             ModuleResult::ByteArray(b) => {
                 JPEGResponder {
@@ -123,6 +94,7 @@ fn jpeg_resize_c(quality: &RawStr) -> JPEGResponder {
         *current_result.borrow_mut() = ModuleResult::None;
         return r;
     });
+    Ok(ret)
 
 }
 
@@ -135,9 +107,14 @@ pub extern "C" fn ensure_linked() {
 fn main() {
     ensure_linked();
 
-    let module = DlModule::load("/home/shr/Code/SpectreSandboxing/wasm_compartments/modules/jpeg_resize_c_stock.so").unwrap();
+
+    let mut module_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    module_path.push("modules");
+    println!("module directory: {:?}", module_path);
+
+    service_directory::load_dir(module_path).unwrap();
 
     rocket::ignite()
-    .mount("/", routes![index, bytes, stream, image, jpeg_resize_c])
+    .mount("/", routes![index, bytes, stream, jpeg_resize_c])
     .launch();
 }
