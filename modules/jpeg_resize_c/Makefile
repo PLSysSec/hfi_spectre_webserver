@@ -1,6 +1,6 @@
 WASM_CC=/opt/wasi-sdk/bin/clang
 WASM_CXX=/opt/wasi-sdk/bin/clang++
-WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all
+WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
 build: ../jpeg_resize_c.wasm
 
 JPEG_FILES=./libjpeg/jaricom.c ./libjpeg/jcapimin.c ./libjpeg/jcapistd.c ./libjpeg/jcarith.c ./libjpeg/jccoefct.c ./libjpeg/jccolor.c ./libjpeg/jcdctmgr.c ./libjpeg/jchuff.c ./libjpeg/jcinit.c ./libjpeg/jcmainct.c ./libjpeg/jcmarker.c ./libjpeg/jcmaster.c ./libjpeg/jcomapi.c \
