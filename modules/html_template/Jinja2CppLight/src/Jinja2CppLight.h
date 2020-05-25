@@ -26,6 +26,7 @@
 #define VIRTUAL virtual
 #define STATIC static
 
+#define throw abort(); //
 namespace Jinja2CppLight {
 
 class render_error : public std::runtime_error {

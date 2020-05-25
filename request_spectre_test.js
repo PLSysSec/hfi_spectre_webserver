@@ -36,7 +36,11 @@ async function runTest(protections, test) {
     var results = {};
     for (var i = 0; i < protections.length; i++) {
         var p = protections[i];
-        var path = "/" + test.module + "?" + test.inputs + "&protection=" + p;
+        var inputString = test.inputs;
+        if (inputString) {
+            inputString += "&";
+        }
+        var path = "/" + test.module + "?" + inputString + "protection=" + p;
         results[p] = await runTestWithProtection(path, test.expected)
     }
     return results;
@@ -84,7 +88,11 @@ async function main() {
         {
             module: "jpeg_resize_c",
             inputs: "quality=20",
-        }
+        },
+        {
+            module: "html_template",
+            inputs: "",
+        },
     ]);
     var filename = "results.json";
     console.log("Writing results of benchmarking to file: " + filename);

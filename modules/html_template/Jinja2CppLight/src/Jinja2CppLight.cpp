@@ -310,10 +310,11 @@ void IfSection::parseIfCondition(const std::string& expression) {
     m_isNegation = (JINJA2_NOT == splittedExpression[expressionIndex]);
     expressionIndex += (m_isNegation) ? 1 : 0;
     if (splittedExpression.size() < expressionIndex + 1) {
-        if (!m_isNegation)
+        if (!m_isNegation){
             throw render_error("Any expression expected after if statement.");
-        else
+        } else {
             throw render_error("Any expression expected after if not statement.");
+        }
     }
     m_variableName = splittedExpression[expressionIndex];
     if (splittedExpression.size() > expressionIndex + 1) {
