@@ -16,8 +16,7 @@ else
 endif
 
 .PHONY: modules
-modules: jpeg_resize_c_all msghash_check_c_all
-# fib_c_all  
+modules: jpeg_resize_c_all msghash_check_c_all fib_c_all
 
 .PRECIOUS: %.wasm
 %.wasm:
