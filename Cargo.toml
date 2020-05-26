@@ -16,3 +16,4 @@ cranelift-spectre = { path = "../lucet-spectre/wasmtime/cranelift-spectre" }
 anyhow = "1.0.31"
 lazy_static = "1.4.0"
 libc = "0.2.70"
+percent-encoding = "2.1.0"
