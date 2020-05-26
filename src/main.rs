@@ -5,13 +5,15 @@
 use anyhow::Error;
 use libc::c_char;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
-use rocket::http::RawStr;
-use rocket::response::Stream;
-use rocket::response::content;
+use rocket::{ Request };
+use rocket::data::{ Data, FromDataSimple, Outcome };
+use rocket::http::{ RawStr, Status };
+use rocket::Outcome::{ Failure, Success };
+use rocket::response::{ Stream, content};
 use std::cell::RefCell;
 use std::ffi::CStr;
 use std::io;
-use std::io::Stdin;
+use std::io::{ Read, Stdin };
 use std::path::PathBuf;
 use std::slice;
 
@@ -201,11 +203,27 @@ fn html_template(protection: &RawStr) -> Result<String, Error> {
     Ok(ret)
 }
 
-#[get("/xml_to_json?<xml>&<protection>")]
-fn xml_to_json(xml: &RawStr, protection: &RawStr) -> Result<String, Error> {
+pub struct StringCopy(pub String);
 
-    let xml = percent_encoding::percent_decode_str(xml).decode_utf8()?;
-    let input: Vec<String> = vec!["".to_string(), xml.to_string()];
+const LIMIT: u64 = 256 * 1024;
+impl FromDataSimple for StringCopy {
+    type Error = String;
+
+    fn from_data(_: &Request<'_>, data: Data) -> Outcome<Self, String> {
+        let mut string = String::new();
+        if let Err(e) = data.open().take(LIMIT).read_to_string(&mut string) {
+            return Failure((Status::InternalServerError, format!("{:?}", e)));
+        }
+        Success(StringCopy(string))
+    }
+}
+
+#[post("/xml_to_json?<protection>", data="<xml>")]
+fn xml_to_json(xml: StringCopy, protection: &RawStr) -> Result<String, Error> {
+
+    let str_data: String = xml.0;
+    let xml_decoded = percent_encoding::percent_decode_str(&str_data).decode_utf8()?;
+    let input: Vec<String> = vec!["".to_string(), xml_decoded.to_string()];
     let instance = wasm_module::create_wasm_instance("xml_to_json".to_string(), protection.to_string(), input);
     CURRENT_RESULT.with(|current_result|{
         *current_result.borrow_mut() = ModuleResult::None;

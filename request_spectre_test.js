@@ -12,12 +12,16 @@ function sleep(ms) {
     });
 }
 
-function runAutoCannon(name, path, expected, duration) {
+function runAutoCannon(name, path, body, expected, duration) {
     console.log("Running " + name);
     var options = {
         title: name,
         url: 'http://localhost:8000' + path
     };
+    if (body) {
+        options["body"] = body;
+        options["method"] = "POST";
+    }
     if (expected) {
         options["expectBody"] = expected;
     }
@@ -29,10 +33,10 @@ function runAutoCannon(name, path, expected, duration) {
     return r;
 }
 
-async function runTestWithProtection(path, expected, duration) {
-    await runAutoCannon("Warmup " + path, path, expected, 10);
+async function runTestWithProtection(path, body, expected, duration) {
+    await runAutoCannon("Warmup " + path, path, body, expected, 10);
     await sleep(5000);
-    return await runAutoCannon("Testing " + path, path, null, duration);
+    return await runAutoCannon("Testing " + path, path, body, null, duration);
 }
 
 async function runTests(protections, tests) {
@@ -48,7 +52,7 @@ async function runTests(protections, tests) {
                 inputString += "&";
             }
             var path = "/" + test.module + "?" + inputString + "protection=" + p;
-            results[p][test.module] = await runTestWithProtection(path, test.expected, test.duration);
+            results[p][test.module] = await runTestWithProtection(path, test.body, test.expected, test.duration);
         }
     }
     return results;
@@ -99,7 +103,8 @@ async function main() {
         },
         {
             module: "xml_to_json",
-            inputs: "xml="+xmlContentsStr,
+            inputs: "",
+            body: xmlContentsStr,
             duration: 60
         },
     ]);
