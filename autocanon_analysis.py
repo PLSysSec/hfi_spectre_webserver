@@ -77,8 +77,8 @@ def main(args):
                     k_names = ['', 'k', 'm']
                     print(f' & {form}{k_names[dep]}', end='\t')
                 else:
-                    stddev = int(results[r][w][s][m])
-                    avg = int(results[r][w][s]['average'])
+                    stddev = float(results[r][w][s][m])
+                    avg = float(results[r][w][s]['average'])
                     rel_stddev = stddev/avg if avg is not 0 else 0
                     print(' & {:.1%}'.format(rel_stddev), end='\t')
 
