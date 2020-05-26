@@ -25,7 +25,7 @@ def parse_results(files):
             ac_result = json.load(f)
 
         # remove first order of json mumbo
-        results.update(ac_result['[object Object]'])
+        results.update(ac_result)
 
     return results
 
