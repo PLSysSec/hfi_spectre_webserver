@@ -4,7 +4,7 @@ const autocannon = require('../node_modules/autocannon')
 const fs = require('fs')
 const util = require('util')
 const fs_writeFile = util.promisify(fs.writeFile)
-
+const fs_readFile = util.promisify(fs.readFile);
 
 function sleep(ms) {
     return new Promise((resolve) => {
@@ -69,24 +69,31 @@ async function main() {
         process.exit(1);
     }
 
+    var xmlContents = await fs_readFile("./request_spectre_test.xml");
+    var xmlContentsStr = encodeURI(xmlContents);
+
     var results = await runTests(protections, [
+        // {
+        //     module: "fib_c",
+        //     inputs: "num=4",
+        //     expected: "3\n"
+        // },
+        // {
+        //     module: "msghash_check_c",
+        //     inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
+        //     expected: "Succeeded\n"
+        // },
+        // {
+        //     module: "jpeg_resize_c",
+        //     inputs: "quality=20",
+        // },
+        // {
+        //     module: "html_template",
+        //     inputs: "",
+        // },
         {
-            module: "fib_c",
-            inputs: "num=4",
-            expected: "3\n"
-        },
-        {
-            module: "msghash_check_c",
-            inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
-            expected: "Succeeded\n"
-        },
-        {
-            module: "jpeg_resize_c",
-            inputs: "quality=20",
-        },
-        {
-            module: "html_template",
-            inputs: "",
+            module: "xml_to_json",
+            inputs: "xml="+xmlContentsStr,
         },
     ]);
     var filename = "results.json";
