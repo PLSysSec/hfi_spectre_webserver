@@ -15,6 +15,7 @@
 
 extern "C" {
 #include "efficientnet_lite3_fp32_1.h"
+#include "ImageNetLabels.h"
 }
 
 #define KILO (1024)
@@ -55,22 +56,10 @@ bool sortByProbabilityDecreasing(const ImageNetResult& resA, const ImageNetResul
 // Returns a vector of ImageNetResults with all probabilities set to 0.
 // In this vector, index 0 is class 0, index 1 is class 1, etc
 std::vector<ImageNetResult> get_imagenet_classes() {
-  static const char filename[] = "ImageNetLabels.txt";
-  std::ifstream classnames(filename);
-  if (!classnames || !classnames.is_open()) {
-    PANIC("Failed to open %s\n", filename);
-  }
 
   std::vector<ImageNetResult> vec;
-  std::string current_classname;
-  while (std::getline(classnames, current_classname)) {
-    char* classname = (char*) malloc(20 * sizeof(char));
-    size_t copied_len = current_classname.copy(classname, 19, 0);
-    classname[copied_len] = '\0';  // null terminate the new string
-    vec.push_back(ImageNetResult { (const char*) classname, 0.0 });
-  }
-  if (vec.size() != NUM_CLASSES) {
-    PANIC("Expected %zu classnames, got %zu\n", NUM_CLASSES, vec.size());
+  for (int i = 0; i < NUM_CLASSES; i++) {
+    vec.push_back(ImageNetResult { image_classes[i], 0.0 });
   }
   return vec;
 }
