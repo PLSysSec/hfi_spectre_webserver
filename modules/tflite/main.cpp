@@ -32,6 +32,7 @@ float getRandFloat(std::default_random_engine engine) {
   return dist(engine);
 }
 
+#ifdef STUB_EXCEPTIONS
 extern "C" {
 void* __cxa_allocate_exception(size_t size) {
   return malloc(size);
@@ -39,6 +40,8 @@ void* __cxa_allocate_exception(size_t size) {
 void __cxa_throw (void *thrown_exception, void *tinfo, void* dest) {
   abort();
 }
+}
+#endif
 
 struct ImageNetResult {
   const char* classname; // owned by this struct

@@ -20,18 +20,19 @@ CXXFLAGS=-I./tensorflow \
 MODELFILE=efficientnet_lite3_fp32_1
 MODELFILE_WASM=efficientnet_lite3_fp32_1_wasm
 
-NATIVE_LIBDIR=$(TENSORFLOW_MICRO_DIR)/tools/make/gen/linux_x86_64/lib
-NATIVE_LDFLAGS=-L$(NATIVE_LIBDIR) -ltensorflow-microlite
-WASM_LIBDIR=$(NATIVE_LIBDIR)
-WASM_LDFLAGS=-L$(WASM_LIBDIR) -ltensorflow-microlite
+LIBDIR=$(TENSORFLOW_MICRO_DIR)/tools/make/gen/linux_x86_64/lib
+NATIVE_LDFLAGS=-L$(LIBDIR) -ltensorflow-microlite
+WASM_LDFLAGS=-L$(LIBDIR) -ltensorflow-microlite
 
 .PHONY: build
 build: $(CURR_DIR)/../tflite.wasm
 
-$(CURR_DIR)/../tflite.wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(WASM_LIBDIR)/libtensorflow-microlite.a
-	$(WASM_CXX) $(CXXFLAGS) $< $(MODELFILE_WASM).o -o $@ $(WASM_LDFLAGS)
+$(CURR_DIR)/../tflite.wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(LIBDIR)/libtensorflow-microlite.a
+	$(WASM_CXX) $(CXXFLAGS) -DSTUB_EXCEPTIONS $< $(MODELFILE_WASM).o -o $@ $(WASM_LDFLAGS)
 
-native: main.cpp $(MODELFILE).h $(MODELFILE).o $(NATIVE_LIBDIR)/libtensorflow-microlite.a
+# A successful native build will also require the env var NO_WASM to be set
+# and you might have to clean if you've previously done a wasm build
+native: main.cpp $(MODELFILE).h $(MODELFILE).o $(LIBDIR)/libtensorflow-microlite.a
 	$(NATIVE_CXX) $(CXXFLAGS) $< $(MODELFILE).o -o $@ $(NATIVE_LDFLAGS)
 
 $(MODELFILE).o: $(MODELFILE).c
@@ -45,25 +46,27 @@ $(MODELFILE).c: $(MODELFILE).tflite
 	xxd -i $< >> $@
 	cat model_suffix.c >> $@
 
-$(NATIVE_LIBDIR)/libtensorflow-microlite.a: $(TENSORFLOW_DOWNLOADS_DIR)
+testing: $(LIBDIR)/libtensorflow-microlite.a
+
+$(LIBDIR)/libtensorflow-microlite.a: $(TENSORFLOW_DOWNLOADS_DIR)
+ifdef NO_WASM
 	cd ./tensorflow && make -f tensorflow/lite/micro/tools/make/Makefile microlite
-
-testing: $(WASM_LIBDIR)/libtensorflow-microlite.a
-
-$(WASM_LIBDIR)/libtensorflow-microlite.a: $(TENSORFLOW_DOWNLOADS_DIR)
+else
 	cd ./tensorflow && \
 	CC=$(WASM_CC) \
-	CC_TOOL=$(WASM_CC) \
 	CXX=$(WASM_CXX) \
-	CXX_TOOL=$(WASM_CXX) \
 	AR=$(WASM_AR) \
-	AR_TOOL=$(WASM_AR) \
 	RANLIB=$(WASM_RANLIB) \
 	LD=$(WASM_LD) \
 	CFLAGS="$(WASM_CFLAGS)" \
 	TARGET=wasm32 \
 	TARGET_ARCH=wasi \
-	$(MAKE) -f tensorflow/lite/micro/tools/make/Makefile microlite
+	$(MAKE) -f tensorflow/lite/micro/tools/make/Makefile \
+	CC_TOOL=$(WASM_CC) \
+	CXX_TOOL=$(WASM_CXX) \
+	AR_TOOL=$(WASM_AR) \
+	microlite
+endif
 
 $(TENSORFLOW_DOWNLOADS_DIR):
 	cd ./tensorflow && make -f tensorflow/lite/micro/tools/make/Makefile third_party_downloads

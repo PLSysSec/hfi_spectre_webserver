@@ -33,9 +33,9 @@ TARGET := $(HOST_OS)
 TARGET_ARCH := $(HOST_ARCH)
 
 # Default compiler and tool names:
-CXX_TOOL := /opt/wasi-sdk/bin/clang++
-CC_TOOL := /opt/wasi-sdk/bin/clang
-AR_TOOL := /opt/wasi-sdk/bin/llvm-ar
+CXX_TOOL := g++
+CC_TOOL := gcc
+AR_TOOL := ar
 
 # Specify TAGS on the command line to add a particular set of specialized
 # implementations, for example TAGS="CMSIS disco_f746ng" to target a Discovery
