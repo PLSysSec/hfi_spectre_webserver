@@ -51,15 +51,27 @@ def main(args):
     print('\\\\\\hline')
     # print metric statistics
     for w in workloads:
-        for m, s in zip(args.metric, args.statistic):
+        for s, m in zip(args.statistic, args.metric):
             print(f' & {s}({m})', end='\t')
     print('\\\\\\hline')
 
     for r in configurations:
         print(f'{r} ', end='\t')
         for w in workloads:
-            for m, s in zip(args.metric, args.statistic):
-                print(f' & {results[r][w][s][m]}', end='\t')
+            for s, m in zip(args.statistic, args.metric):
+                if m != 'stddev':
+                    if results[r][w][s][m] < 100:
+                        print(f' & {results[r][w][s][m]:.2f}', end='\t')
+                    elif results[r][w][s][m] < 1000:
+                        print(f' & {results[r][w][s][m]:.1f}', end='\t')
+                    else:
+                        print(f' & {results[r][w][s][m]:.0f}', end='\t')
+                else:
+                    stddev = int(results[r][w][s][m])
+                    avg = int(results[r][w][s]['average'])
+                    rel_stddev = stddev/avg if avg is not 0 else 0
+                    print(' & {:.1%}'.format(rel_stddev), end='\t')
+
 
         print('\\\\\\hline')
 
