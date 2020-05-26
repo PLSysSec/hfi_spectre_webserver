@@ -29,6 +29,18 @@ def parse_results(files):
 
     return results
 
+
+def format_num(num):
+    if num < 10:
+        return f'{num:.2f}', 0
+    elif num < 100:
+        return f'{num:.1f}', 0
+    elif num < 1000:
+        return f'{num:.0f}', 0
+    else:
+        res, dep = format_num(num/1000)
+        return res, int(dep) + 1
+
 def main(args):
     args = ARGPARSER.parse_args()
 
@@ -60,12 +72,10 @@ def main(args):
         for w in workloads:
             for s, m in zip(args.statistic, args.metric):
                 if m != 'stddev':
-                    if results[r][w][s][m] < 100:
-                        print(f' & {results[r][w][s][m]:.2f}', end='\t')
-                    elif results[r][w][s][m] < 1000:
-                        print(f' & {results[r][w][s][m]:.1f}', end='\t')
-                    else:
-                        print(f' & {results[r][w][s][m]:.0f}', end='\t')
+                    lres = float(results[r][w][s][m])
+                    form, dep = format_num(lres)
+                    k_names = ['', 'k', 'm']
+                    print(f' & {form}{k_names[dep]}', end='\t')
                 else:
                     stddev = int(results[r][w][s][m])
                     avg = int(results[r][w][s]['average'])
