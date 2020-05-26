@@ -1,0 +1,4 @@
+native
+*~
+*.o
+efficientnet_lite3_fp32_1.c
