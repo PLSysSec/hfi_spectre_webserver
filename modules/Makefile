@@ -16,7 +16,8 @@ else
 endif
 
 .PHONY: modules
-modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all tflite_all
+modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all xml_to_json_all
+# tflite_all
 
 .PRECIOUS: %.wasm
 %.wasm:

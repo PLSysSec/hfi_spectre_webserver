@@ -25,8 +25,8 @@
 
 #if defined(RAPIDXML_NO_EXCEPTIONS)
 
-#define RAPIDXML_PARSE_ERROR(what, where) { parse_error_handler(what, where); assert(0); }
-#define RAPIDXML_EOF_ERROR(what, where) { parse_error_handler(what, where); assert(0); }
+#define RAPIDXML_PARSE_ERROR(what, where) { abort(); }
+#define RAPIDXML_EOF_ERROR(what, where) { abort(); }
 
 namespace rapidxml
 {
@@ -1498,8 +1498,10 @@ namespace rapidxml
 
         void validate() const
         {
-            if (this->xmlns() == 0)
-                throw validation_error("Element XMLNS unbound");
+            if (this->xmlns() == 0) {
+                printf("validation_error: Element XMLNS unbound\n");
+                abort();
+            }
             for (xml_node<Ch> * child = this->first_node();
                  child;
                  child = child->next_sibling()) {
@@ -1508,17 +1510,22 @@ namespace rapidxml
             for (xml_attribute<Ch> *attribute = first_attribute();
                  attribute;
                  attribute = attribute->m_next_attribute) {
-                if (attribute->xmlns() == 0)
-                    throw validation_error("Attribute XMLNS unbound");
+                if (attribute->xmlns() == 0){
+                    printf("validation_error: Attribute XMLNS unbound\n");
+                    abort();
+                }
                 for (xml_attribute<Ch> *otherattr = first_attribute();
                      otherattr != attribute;
                      otherattr = otherattr->m_next_attribute) {
                     if (internal::compare(attribute->name(), attribute->name_size(), otherattr->name(), otherattr->name_size(), true)) {
-                        throw validation_error("Attribute doubled");
+                        printf("validation_error: Attribute doubled\n");
+                        abort();
                     }
                     if (internal::compare(attribute->local_name(), attribute->local_name_size(), otherattr->local_name(), otherattr->local_name_size(), true)
-                        && internal::compare(attribute->xmlns(), attribute->xmlns_size(), otherattr->xmlns(), otherattr->xmlns_size(), true))
-                        throw validation_error("Attribute XMLNS doubled");
+                        && internal::compare(attribute->xmlns(), attribute->xmlns_size(), otherattr->xmlns(), otherattr->xmlns_size(), true)) {
+                        printf("validation_error: Attribute XMLNS doubled\n");
+                        abort();
+                    }
                 }
             }
         }

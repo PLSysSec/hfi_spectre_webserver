@@ -105,7 +105,7 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
                 }
             },
             _ => {
-                panic!("Unexpected response from jpeg module");
+                panic!("Unexpected response from module");
             }
         };
         *current_result.borrow_mut() = ModuleResult::None;
@@ -134,7 +134,7 @@ fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<S
                 s.clone()
             },
             _ => {
-                panic!("Unexpected response from jpeg module");
+                panic!("Unexpected response from module");
             }
         };
         *current_result.borrow_mut() = ModuleResult::None;
@@ -163,7 +163,7 @@ fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
                 s.clone()
             },
             _ => {
-                panic!("Unexpected response from jpeg module");
+                panic!("Unexpected response from module");
             }
         };
         *current_result.borrow_mut() = ModuleResult::None;
@@ -201,6 +201,36 @@ fn html_template(protection: &RawStr) -> Result<String, Error> {
     Ok(ret)
 }
 
+#[get("/xml_to_json?<xml>&<protection>")]
+fn xml_to_json(xml: &RawStr, protection: &RawStr) -> Result<String, Error> {
+
+    let xml = percent_encoding::percent_decode_str(xml).decode_utf8()?;
+    let input: Vec<String> = vec!["".to_string(), xml.to_string()];
+    let instance = wasm_module::create_wasm_instance("xml_to_json".to_string(), protection.to_string(), input);
+    CURRENT_RESULT.with(|current_result|{
+        *current_result.borrow_mut() = ModuleResult::None;
+    });
+
+    let result = instance?.run(lucet_wasi::START_SYMBOL, &[])?;
+    if !result.is_returned() {
+        panic!("wasm module yielded?");
+    }
+
+    let ret = CURRENT_RESULT.with(|current_result|{
+        let r = match &*current_result.borrow() {
+            ModuleResult::String(s) => {
+                s.clone()
+            },
+            _ => {
+                panic!("Unexpected response from module");
+            }
+        };
+        *current_result.borrow_mut() = ModuleResult::None;
+        return r;
+    });
+    Ok(ret)
+}
+
 #[no_mangle]
 pub extern "C" fn ensure_linked() {
     lucet_runtime::lucet_internal_ensure_linked();
@@ -218,6 +248,6 @@ fn main() {
     service_directory::load_dir(module_path).unwrap();
 
     rocket::ignite()
-    .mount("/", routes![index, bytes, stream, jpeg_resize_c, msghash_check_c, fib_c, html_template])
+    .mount("/", routes![index, bytes, stream, jpeg_resize_c, msghash_check_c, fib_c, html_template, xml_to_json])
     .launch();
 }

@@ -31,8 +31,10 @@ namespace rapidxml
 
             // Open stream
             basic_ifstream<Ch> stream(filename, ios::binary);
-            if (!stream)
-                throw runtime_error(string("cannot open file ") + filename);
+            if (!stream) {
+                printf("runtime_error:(string(cannot open file ) + filename\n");
+                abort();
+            }
             stream.unsetf(ios::skipws);
             
             // Determine stream size
@@ -55,8 +57,10 @@ namespace rapidxml
             // Load data and add terminating 0
             stream.unsetf(ios::skipws);
             m_data.assign(istreambuf_iterator<Ch>(stream), istreambuf_iterator<Ch>());
-            if (stream.fail() || stream.bad())
-                throw runtime_error("error reading stream");
+            if (stream.fail() || stream.bad()) {
+                printf("runtime_error: error reading stream\n");
+                abort();
+            }
             m_data.push_back(0);
         }
         
