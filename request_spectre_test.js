@@ -32,27 +32,21 @@ async function runTestWithProtection(path, expected) {
     return await runAutoCannon("Testing " + path, path, null);
 }
 
-async function runTest(path, tests) {
-    var results = {};
-    for (var i = 0; i < tests.length; i++) {
-        var test = tests[i];
-        var r = await runTestWithProtection(path, test.expected);
-        results[test.module] = r;
-    }
-    return results;
-}
-
 async function runTests(protections, tests) {
 
     var results = {};
     for (var i = 0; i < protections.length; i++) {
         var p = protections[i];
-        var inputString = test.inputs;
-        if (inputString) {
-            inputString += "&";
+        results[p] = {};
+        for (var j = 0; j < tests.length; j++) {
+            var test = tests[j];
+            var inputString = test.inputs;
+            if (inputString) {
+                inputString += "&";
+            }
+            var path = "/" + test.module + "?" + inputString + "protection=" + p;
+            results[p][test.module] = await runTestWithProtection(path, test.expected);
         }
-        var path = "/" + test.module + "?" + inputString + "protection=" + p;
-        results[p] = await runTest(path, tests)
     }
     return results;
 }
