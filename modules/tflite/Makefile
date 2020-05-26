@@ -1,6 +1,6 @@
 CURR_DIR=$(shell realpath .)
-NATIVE_CC=clang
-NATIVE_CXX=$(NATIVE_CC)++
+NATIVE_CC=gcc
+NATIVE_CXX=g++
 WASM_CC=/opt/wasi-sdk/bin/clang
 WASM_CXX=$(WASM_CC)++
 
