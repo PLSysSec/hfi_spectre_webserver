@@ -79,18 +79,18 @@ async function main() {
         //     expected: "3\n"
         // },
         // {
-        //     module: "msghash_check_c",
-        //     inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
-        //     expected: "Succeeded\n"
-        // },
-        // {
-        //     module: "jpeg_resize_c",
-        //     inputs: "quality=20",
-        // },
-        // {
-        //     module: "html_template",
-        //     inputs: "",
-        // },
+            module: "msghash_check_c",
+            inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
+            expected: "Succeeded\n"
+        },
+        {
+            module: "jpeg_resize_c",
+            inputs: "quality=20",
+        },
+        {
+            module: "html_template",
+            inputs: "",
+        },
         {
             module: "xml_to_json",
             inputs: "xml="+xmlContentsStr,
