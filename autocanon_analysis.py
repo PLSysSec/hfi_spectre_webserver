@@ -57,10 +57,10 @@ def main(args):
     num_workloads = len(workloads)
 
     # print workloads
-    print('Configuration ', end='')
+    print('\\multirow{2}{1cm}{Configuration} ', end='')
     for w in workloads:
-        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c}{' + w + '}', end='')
-    print('\\\\\\hline')
+        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w + '}', end='')
+    print('\\\\\\cline{2-'+ str(len(workloads) * 4 + 1) + '}')
     # print metric statistics
     for w in workloads:
         for s, m in zip(args.statistic, args.metric):
