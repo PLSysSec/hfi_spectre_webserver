@@ -47,7 +47,7 @@ def main(args):
     # print workloads
     print('Configuration ', end='')
     for w in workloads:
-        print(' & \\multicolumn{' + str(len(args.metric)) + '}\{c\}{' + w + '}', end='')
+        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c}{' + w + '}', end='')
     print('\\\\\\hline')
     # print metric statistics
     for w in workloads:
