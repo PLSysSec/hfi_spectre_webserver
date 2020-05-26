@@ -45,7 +45,7 @@ void __cxa_throw (void *thrown_exception, void *tinfo, void* dest) {
 #endif
 
 struct ImageNetResult {
-  const char* classname; // owned by this struct
+  const char* classname;
   float probability;
 };
 
