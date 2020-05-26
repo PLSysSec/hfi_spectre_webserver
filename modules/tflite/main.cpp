@@ -21,11 +21,20 @@ extern "C" {
 
 #define PANIC(...) \
   fprintf(stderr, __VA_ARGS__); \
-  exit(1) \
+  abort() \
 
 float getRandFloat(std::default_random_engine engine) {
   static std::uniform_real_distribution<float> dist(0.0, 1.0);
   return dist(engine);
+}
+
+extern "C" {
+void* __cxa_allocate_exception(size_t size) {
+  return malloc(size);
+}
+void __cxa_throw (void *thrown_exception, void *tinfo, void* dest) {
+  abort();
+}
 }
 
 int main(int argc, char* argv[]) {

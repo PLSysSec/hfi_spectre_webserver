@@ -33,9 +33,9 @@ TARGET := $(HOST_OS)
 TARGET_ARCH := $(HOST_ARCH)
 
 # Default compiler and tool names:
-CXX_TOOL := g++
-CC_TOOL := gcc
-AR_TOOL := ar
+CXX_TOOL := /opt/wasi-sdk/bin/clang++
+CC_TOOL := /opt/wasi-sdk/bin/clang
+AR_TOOL := /opt/wasi-sdk/bin/llvm-ar
 
 # Specify TAGS on the command line to add a particular set of specialized
 # implementations, for example TAGS="CMSIS disco_f746ng" to target a Discovery
@@ -71,7 +71,7 @@ TEST_SCRIPT := tensorflow/lite/micro/testing/test_linux_binary.sh
 MICROLITE_LIBS := -lm
 
 # TODO(b/150240249): Add in -fno-rtti once that works for the Xtensa toolchain.
-CXXFLAGS := -std=c++11 -DTF_LITE_STATIC_MEMORY
+CXXFLAGS := -std=c++11 -DTF_LITE_STATIC_MEMORY -fno-exceptions
 CCFLAGS  := -std=c11   -DTF_LITE_STATIC_MEMORY
 ARFLAGS := -r
 
