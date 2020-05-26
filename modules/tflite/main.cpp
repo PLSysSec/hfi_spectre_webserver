@@ -3,6 +3,8 @@
 #include <ctime>
 #include <random>
 #include <vector>
+#include <string>
+#include <fstream>
 #include <algorithm>
 
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -18,6 +20,8 @@ extern "C" {
 #define KILO (1024)
 #define MEGA (KILO * KILO)
 #define GIGA (KILO * MEGA)
+
+static const size_t NUM_CLASSES = 1000;
 
 #define PANIC(...) \
   fprintf(stderr, __VA_ARGS__); \
@@ -35,6 +39,37 @@ void* __cxa_allocate_exception(size_t size) {
 void __cxa_throw (void *thrown_exception, void *tinfo, void* dest) {
   abort();
 }
+
+struct ImageNetResult {
+  const char* classname; // owned by this struct
+  float probability;
+};
+
+bool sortByProbabilityDecreasing(const ImageNetResult& resA, const ImageNetResult& resB) {
+  return (resA.probability > resB.probability);
+}
+
+// Returns a vector of ImageNetResults with all probabilities set to 0.
+// In this vector, index 0 is class 0, index 1 is class 1, etc
+std::vector<ImageNetResult> get_imagenet_classes() {
+  static const char filename[] = "ImageNetLabels.txt";
+  std::ifstream classnames(filename);
+  if (!classnames || !classnames.is_open()) {
+    PANIC("Failed to open %s\n", filename);
+  }
+
+  std::vector<ImageNetResult> vec;
+  std::string current_classname;
+  while (std::getline(classnames, current_classname)) {
+    char* classname = (char*) malloc(20 * sizeof(char));
+    size_t copied_len = current_classname.copy(classname, 19, 0);
+    classname[copied_len] = '\0';  // null terminate the new string
+    vec.push_back(ImageNetResult { (const char*) classname, 0.0 });
+  }
+  if (vec.size() != NUM_CLASSES) {
+    PANIC("Expected %zu classnames, got %zu\n", NUM_CLASSES, vec.size());
+  }
+  return vec;
 }
 
 int main(int argc, char* argv[]) {
@@ -144,7 +179,6 @@ int main(int argc, char* argv[]) {
   if (output == nullptr) {
     PANIC("Failed to get output tensor\n");
   }
-  const int NUM_CLASSES = 1000;
   // output is expected to be a 2D array with dimensions batch_size, NUM_CLASSES
   // we use batch_size 1
   if (output->dims->size != 2) {
@@ -154,19 +188,19 @@ int main(int argc, char* argv[]) {
     PANIC("Expected output batch size to be 1, got %u\n", output->dims->data[0]);
   }
   if (output->dims->data[1] != NUM_CLASSES) {
-    PANIC("Expected output dimension to be %u, got %u\n", NUM_CLASSES, output->dims->data[1]);
+    PANIC("Expected output dimension to be %zu, got %u\n", NUM_CLASSES, output->dims->data[1]);
   }
   if (output->type != kTfLiteFloat32) {
     PANIC("Expected output type to be 32-bit float\n");
   }
-  std::vector<float> output_values;
+  std::vector<ImageNetResult> results = get_imagenet_classes();
   for (int i = 0; i < NUM_CLASSES; i++) {
-    output_values.push_back(output->data.f[i]);
+    results[i].probability = output->data.f[i];
   }
-  std::sort(output_values.begin(), output_values.end());
-  printf("Top 5 output probabilities:\n");
+  std::sort(results.begin(), results.end(), &sortByProbabilityDecreasing);
+  printf("Top 5 class candidates:\n");
   for (int i = 0; i < 5; i++) {
-    printf("%g\n", output_values[NUM_CLASSES-1 - i]);
+    printf("%s (%.2f%%)\n", results[i].classname, 100.0 * results[i].probability);
   }
 
   return 0;
