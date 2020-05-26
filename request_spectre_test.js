@@ -12,7 +12,7 @@ function sleep(ms) {
     });
 }
 
-function runAutoCannon(name, path, expected) {
+function runAutoCannon(name, path, expected, duration) {
     console.log("Running " + name);
     var options = {
         title: name,
@@ -21,15 +21,18 @@ function runAutoCannon(name, path, expected) {
     if (expected) {
         options["expectBody"] = expected;
     }
+    if (duration) {
+        options["duration"] = duration;
+    }
     var r = autocannon(options);
     autocannon.track(r, { renderLatencyTable: true })
     return r;
 }
 
-async function runTestWithProtection(path, expected) {
-    await runAutoCannon("Warmup " + path, path, expected)
+async function runTestWithProtection(path, expected, duration) {
+    await runAutoCannon("Warmup " + path, path, expected, 10);
     await sleep(5000);
-    return await runAutoCannon("Testing " + path, path, null);
+    return await runAutoCannon("Testing " + path, path, null, duration);
 }
 
 async function runTests(protections, tests) {
@@ -45,7 +48,7 @@ async function runTests(protections, tests) {
                 inputString += "&";
             }
             var path = "/" + test.module + "?" + inputString + "protection=" + p;
-            results[p][test.module] = await runTestWithProtection(path, test.expected);
+            results[p][test.module] = await runTestWithProtection(path, test.expected, test.duration);
         }
     }
     return results;
@@ -78,22 +81,26 @@ async function main() {
         //     inputs: "num=4",
         //     expected: "3\n"
         // },
-        // {
+        {
             module: "msghash_check_c",
             inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
-            expected: "Succeeded\n"
+            expected: "Succeeded\n",
+            duration: 60
         },
         {
             module: "jpeg_resize_c",
             inputs: "quality=20",
+            duration: 60
         },
         {
             module: "html_template",
             inputs: "",
+            duration: 60
         },
         {
             module: "xml_to_json",
             inputs: "xml="+xmlContentsStr,
+            duration: 60
         },
     ]);
     var filename = "results.json";
