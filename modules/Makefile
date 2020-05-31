@@ -47,7 +47,22 @@ modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all xml_t
 %_spectre_cet_no_cross_sbx.so: %.wasm
 	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet --spectre-no-cross-sbx-attacks $< -o $@
 
-%_all: %.wasm %_stock.so %_spectre_sfi.so %_spectre_cet.so %_spectre_sfi_no_cross_sbx.so %_spectre_cet_no_cross_sbx.so
+.PRECIOUS: %_spectre_sfi_onlyisol.so
+%_spectre_sfi_onlyisol.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi --spectre-only-sandbox-isolation $< -o $@
+
+.PRECIOUS: %_spectre_cet_onlyisol.so
+%_spectre_cet_onlyisol.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet --spectre-only-sandbox-isolation $< -o $@
+
+%_all: %.wasm \
+%_stock.so \
+%_spectre_sfi.so \
+%_spectre_cet.so \
+%_spectre_sfi_no_cross_sbx.so \
+%_spectre_cet_no_cross_sbx.so \
+%_spectre_sfi_onlyisol.so \
+%_spectre_cet_onlyisol.so
 	touch $*_all
 
 clean:

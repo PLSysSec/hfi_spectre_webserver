@@ -68,9 +68,9 @@ async function main() {
     var protections;
 
     if (myArgs[0] == "--cet") {
-        protections = ["spectre_cet", "spectre_cet_no_cross_sbx"];
+        protections = ["spectre_cet", "spectre_cet_no_cross_sbx", "spectre_cet_onlyisol"];
     } else if (myArgs[0] == "--nocet") {
-        protections = ["stock", "spectre_sfi", "spectre_sfi_no_cross_sbx"];
+        protections = ["stock", "spectre_sfi", "spectre_sfi_no_cross_sbx", "spectre_sfi_onlyisol"];
     } else {
         console.log("Expected one arg [--cet|--nocet]");
         process.exit(1);
