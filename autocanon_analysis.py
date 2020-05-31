@@ -12,11 +12,11 @@ ARGPARSER.add_argument('-file',
 ARGPARSER.add_argument('-statistic',
     nargs='*',
     help='Values requests, latency, throughput',
-    default=['throughput'])
+    default=['latency', 'latency', 'throughput', 'throughput'])
 ARGPARSER.add_argument('-metric',
     nargs='*',
     help='Values include average, mean, stddev, min, max, percentile (e.g. p90, p99_9)',
-    default=['average'])
+    default=['p99_9', 'stddev', 'average', 'stddev'])
 
 def parse_results(files):
     results = {}
@@ -41,6 +41,9 @@ def format_num(num):
         res, dep = format_num(num/1000)
         return res, int(dep) + 1
 
+def print_padded(msg, padded_len):
+    print(msg.ljust(padded_len), end='')
+
 def main(args):
     args = ARGPARSER.parse_args()
 
@@ -57,32 +60,32 @@ def main(args):
     num_workloads = len(workloads)
 
     # print workloads
-    print('\\multirow{2}{1cm}{Configuration} ', end='')
+    print('\\multirow{2}{1cm}{Configuration} ')
     for w in workloads:
-        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w + '}', end='')
-    print('\\\\\\cline{2-'+ str(len(workloads) * 4 + 1) + '}')
+        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w + '}')
+    print('\\\\\\cline{2-'+ str(len(workloads) * 4 + 1) + '}\n')
     # print metric statistics
     for w in workloads:
         for s, m in zip(args.statistic, args.metric):
             print(f' & {s}({m})', end='\t')
-    print('\\\\\\hline')
+        print('')
+    print('\\\\\\hline\n')
 
     for r in configurations:
-        print(f'{r} ', end='\t')
+        print(f'{r} ')
         for w in workloads:
             for s, m in zip(args.statistic, args.metric):
                 if m != 'stddev':
                     lres = float(results[r][w][s][m])
                     form, dep = format_num(lres)
                     k_names = ['', 'k', 'm']
-                    print(f' & {form}{k_names[dep]}', end='\t')
+                    print_padded(f' & {form}{k_names[dep]}', 15)
                 else:
                     stddev = float(results[r][w][s][m])
                     avg = float(results[r][w][s]['average'])
                     rel_stddev = stddev/avg if avg is not 0 else 0
-                    print(' & {:.1%}'.format(rel_stddev), end='\t')
-
-
-        print('\\\\\\hline')
+                    print_padded(' & {:.1%}'.format(rel_stddev), 15)
+            print('')
+        print('\\\\\\hline\n')
 
 sys.exit(main(sys.argv))
