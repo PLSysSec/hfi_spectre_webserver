@@ -72,7 +72,7 @@ modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all xml_t
 %_spectre_sfi_isol_cross_app.so \
 %_spectre_cet_isol_cross_app.so \
 %_spectre_sfi_isol_cross.so \
-%_spectre_cet_isol_cross.so \
+%_spectre_cet_isol_cross.so
 	touch $*_all
 
 clean:
