@@ -1200,6 +1200,7 @@ name = "spectresfi_webserver"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
  "cranelift-spectre",
  "lazy_static",
  "libc",

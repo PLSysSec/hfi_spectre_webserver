@@ -2,7 +2,10 @@
 
 #[macro_use] extern crate rocket;
 
+#[macro_use] extern crate clap;
+
 use anyhow::Error;
+use clap::Arg;
 use libc::c_char;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
 use rocket::{ Request };
@@ -258,6 +261,16 @@ pub extern "C" fn ensure_linked() {
 fn main() {
     ensure_linked();
 
+    let matches = app_from_crate!()
+    .arg(
+        Arg::with_name("sandbox_cores")
+            .long("--sandbox-cores")
+            .takes_value(true)
+            .help("No effect if app poisoning protections are disabled. Number of cores to dedicate for sandboxes if app poisoning protection is enabled. If not set, we use the defaults, which is to use half the cores for sandboxes."),
+    ).get_matches();
+
+    let sandbox_cores = matches.value_of("sandbox_cores").map(|t| t.parse::<usize>().unwrap());
+    cranelift_spectre::runtime::use_spectre_mitigation_core_partition(sandbox_cores);
 
     let mut module_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     module_path.push("modules");
