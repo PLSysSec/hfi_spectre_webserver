@@ -62,17 +62,17 @@ def main(args):
     # print workloads
     print('\\multirow{2}{1cm}{Configuration} ')
     for w in workloads:
-        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w + '}')
+        print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w.replace('_', '\_') + '}')
     print('\\\\\\cline{2-'+ str(len(workloads) * 4 + 1) + '}\n')
     # print metric statistics
     for w in workloads:
         for s, m in zip(args.statistic, args.metric):
-            print(f' & {s}({m})', end='\t')
+            print(f' & {s}({m})'.replace('_', '\_'), end='\t')
         print('')
     print('\\\\\\hline\n')
 
     for r in configurations:
-        print(f'{r} ')
+        print(f'{r} '.replace('_', '\_'))
         for w in workloads:
             for s, m in zip(args.statistic, args.metric):
                 if m != 'stddev':
@@ -84,7 +84,7 @@ def main(args):
                     stddev = float(results[r][w][s][m])
                     avg = float(results[r][w][s]['average'])
                     rel_stddev = stddev/avg if avg is not 0 else 0
-                    print_padded(' & {:.1%}'.format(rel_stddev), 15)
+                    print_padded(' & {:.1%}'.format(rel_stddev).replace('%', '\%'), 15)
             print('')
         print('\\\\\\hline\n')
 
