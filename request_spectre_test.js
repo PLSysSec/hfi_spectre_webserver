@@ -95,11 +95,6 @@ async function main() {
             duration: 180
         },
         {
-            module: "jpeg_resize_c",
-            inputs: "quality=20",
-            duration: 180
-        },
-        {
             module: "html_template",
             inputs: "",
             duration: 180
@@ -108,6 +103,11 @@ async function main() {
             module: "xml_to_json",
             inputs: "",
             body: xmlContentsStr,
+            duration: 180
+        },
+        {
+            module: "jpeg_resize_c",
+            inputs: "quality=20",
             duration: 180
         },
     ]);
