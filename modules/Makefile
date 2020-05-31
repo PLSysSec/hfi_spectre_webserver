@@ -31,38 +31,48 @@ modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all xml_t
 %_stock.so: %.wasm
 	$(LUCET) $(LUCET_COMMON_FLAGS) $< -o $@
 
-.PRECIOUS: %_spectre_sfi.so
-%_spectre_sfi.so: %.wasm
-	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi $< -o $@
-
-.PRECIOUS: %_spectre_cet.so
-%_spectre_cet.so: %.wasm
-	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet $< -o $@
-
-.PRECIOUS: %_spectre_sfi_no_cross_sbx.so
-%_spectre_sfi_no_cross_sbx.so: %.wasm
-	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi --spectre-no-cross-sbx-attacks $< -o $@
-
-.PRECIOUS: %_spectre_cet_no_cross_sbx.so
-%_spectre_cet_no_cross_sbx.so: %.wasm
-	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet --spectre-no-cross-sbx-attacks $< -o $@
-
-.PRECIOUS: %_spectre_sfi_onlyisol.so
-%_spectre_sfi_onlyisol.so: %.wasm
+.PRECIOUS: %_spectre_sfi_isol.so
+%_spectre_sfi_isol.so: %.wasm
 	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi --spectre-only-sandbox-isolation $< -o $@
 
-.PRECIOUS: %_spectre_cet_onlyisol.so
-%_spectre_cet_onlyisol.so: %.wasm
+.PRECIOUS: %_spectre_cet_isol.so
+%_spectre_cet_isol.so: %.wasm
 	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet --spectre-only-sandbox-isolation $< -o $@
+
+.PRECIOUS: %_spectre_sfi_isol_cross_sbx.so
+%_spectre_sfi_isol_cross_sbx.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi --spectre-disable-core-switching $< -o $@
+
+.PRECIOUS: %_spectre_cet_isol_cross_sbx.so
+%_spectre_cet_isol_cross_sbx.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet --spectre-disable-core-switching $< -o $@
+
+.PRECIOUS: %_spectre_sfi_isol_cross_app.so
+%_spectre_sfi_isol_cross_app.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi --spectre-no-cross-sbx-attacks $< -o $@
+
+.PRECIOUS: %_spectre_cet_isol_cross_app.so
+%_spectre_cet_isol_cross_app.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet --spectre-no-cross-sbx-attacks $< -o $@
+
+.PRECIOUS: %_spectre_sfi_isol_cross.so
+%_spectre_sfi_isol_cross.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation sfi $< -o $@
+
+.PRECIOUS: %_spectre_cet_isol_cross.so
+%_spectre_cet_isol_cross.so: %.wasm
+	$(LUCET) $(LUCET_COMMON_FLAGS) --spectre-mitigation cet $< -o $@
 
 %_all: %.wasm \
 %_stock.so \
-%_spectre_sfi.so \
-%_spectre_cet.so \
-%_spectre_sfi_no_cross_sbx.so \
-%_spectre_cet_no_cross_sbx.so \
-%_spectre_sfi_onlyisol.so \
-%_spectre_cet_onlyisol.so
+%_spectre_sfi_isol.so \
+%_spectre_cet_isol.so \
+%_spectre_sfi_isol_cross_sbx.so \
+%_spectre_cet_isol_cross_sbx.so \
+%_spectre_sfi_isol_cross_app.so \
+%_spectre_cet_isol_cross_app.so \
+%_spectre_sfi_isol_cross.so \
+%_spectre_cet_isol_cross.so \
 	touch $*_all
 
 clean:

@@ -71,9 +71,9 @@ async function main() {
     var protections;
 
     if (myArgs[0] == "--cet") {
-        protections = ["spectre_cet_onlyisol", "spectre_cet_no_cross_sbx", "spectre_cet"];
+        protections = ["spectre_cet_isol", "spectre_cet_isol_cross_sbx", "spectre_cet_isol_cross_app", "spectre_cet_isol_cross"];
     } else if (myArgs[0] == "--nocet") {
-        protections = ["stock", "spectre_sfi_onlyisol", "spectre_sfi_no_cross_sbx", "spectre_sfi"];
+        protections = ["stock", "spectre_sfi_isol", "spectre_sfi_isol_cross_sbx", "spectre_sfi_isol_cross_app", "spectre_sfi_isol_cross"];
     } else {
         console.log("Expected one arg [--cet|--nocet]");
         process.exit(1);
@@ -92,23 +92,23 @@ async function main() {
             module: "msghash_check_c",
             inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
             expected: "Succeeded\n",
-            duration: 60
+            duration: 180
         },
         {
             module: "jpeg_resize_c",
             inputs: "quality=20",
-            duration: 60
+            duration: 180
         },
         {
             module: "html_template",
             inputs: "",
-            duration: 60
+            duration: 180
         },
         {
             module: "xml_to_json",
             inputs: "",
             body: xmlContentsStr,
-            duration: 60
+            duration: 180
         },
     ]);
     var filename = "results.json";
