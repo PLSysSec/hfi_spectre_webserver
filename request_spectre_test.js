@@ -65,12 +65,15 @@ async function main() {
         process.exit(1);
     }
 
+    console.log("Make sure to restart the webserver on each run. Tests with core protections mess up the affinities of server threads.");
+    await sleep(5000);
+
     var protections;
 
     if (myArgs[0] == "--cet") {
-        protections = ["spectre_cet", "spectre_cet_no_cross_sbx", "spectre_cet_onlyisol"];
+        protections = ["spectre_cet_onlyisol", "spectre_cet_no_cross_sbx", "spectre_cet"];
     } else if (myArgs[0] == "--nocet") {
-        protections = ["stock", "spectre_sfi", "spectre_sfi_no_cross_sbx", "spectre_sfi_onlyisol"];
+        protections = ["stock", "spectre_sfi_onlyisol", "spectre_sfi_no_cross_sbx", "spectre_sfi"];
     } else {
         console.log("Expected one arg [--cet|--nocet]");
         process.exit(1);
