@@ -10,6 +10,8 @@ build: ../msghash_check_c.wasm
 
 ./libsodium/Makefile:
 	cd libsodium && autoreconf -i
+	cp ./config.guess ./libsodium/build-aux/config.guess
+	cp ./config.sub ./libsodium/build-aux/config.sub
 	cd libsodium && CC=$(WASM_CC) AR=$(WASM_AR) RANLIB=$(WASM_RANLIB) LD=$(WASM_LD) CFLAGS="$(WASM_CFLAGS)" ./configure --disable-asm --disable-ssp $(WASM_HOST)
 
 ../msghash_check_c.wasm: msghash_check.cpp ./libsodium/Makefile
