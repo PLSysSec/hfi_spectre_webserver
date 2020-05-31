@@ -83,7 +83,7 @@ def main(args):
                 else:
                     stddev = float(results[r][w][s][m])
                     avg = float(results[r][w][s]['average'])
-                    rel_stddev = stddev/avg if avg is not 0 else 0
+                    rel_stddev = stddev/avg if avg != 0 else 0
                     print_padded(' & {:.1%}'.format(rel_stddev).replace('%', '\%'), 15)
             print('')
         print('\\\\\\hline\n')
