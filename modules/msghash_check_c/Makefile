@@ -9,8 +9,7 @@ WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
 build: ../msghash_check_c.wasm
 
 ./libsodium/Makefile:
-	# autoconf fails but the failure is benign
-	-cd libsodium && autoconf
+	cd libsodium && autoreconf -i
 	cd libsodium && CC=$(WASM_CC) AR=$(WASM_AR) RANLIB=$(WASM_RANLIB) LD=$(WASM_LD) CFLAGS="$(WASM_CFLAGS)" ./configure --disable-asm --disable-ssp $(WASM_HOST)
 
 ../msghash_check_c.wasm: msghash_check.cpp ./libsodium/Makefile
