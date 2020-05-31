@@ -10,7 +10,6 @@ build: ../msghash_check_c.wasm
 
 ./libsodium/Makefile:
 	tax -xf ./libsodium.tar.xz
-	cd libsodium && CC=$(WASM_CC) AR=$(WASM_AR) RANLIB=$(WASM_RANLIB) LD=$(WASM_LD) CFLAGS="$(WASM_CFLAGS)" ./configure --disable-asm --disable-ssp $(WASM_HOST)
 
 ../msghash_check_c.wasm: msghash_check.cpp ./libsodium/Makefile
 	cd libsodium && $(MAKE)
@@ -22,7 +21,6 @@ build: ../msghash_check_c.wasm
 	$(CXX) -g msghash_check.cpp -I libsodium/src/libsodium/include libsodium/src/libsodium/.libs/libsodium.a -o $@
 
 clean:
-	cd ./libsodium && $(MAKE) clean
 	-rm -rf ./native
 	-rm -f ./libsodium/Makefile
 	-rm -f ../msghash_check_c.wasm
