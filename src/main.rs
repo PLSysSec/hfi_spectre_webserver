@@ -7,6 +7,7 @@
 use anyhow::Error;
 use clap::Arg;
 use libc::c_char;
+use lucet_runtime::DlModule;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
 use rocket::{ Request };
 use rocket::data::{ Data, FromDataSimple, Outcome };
@@ -267,10 +268,22 @@ fn main() {
             .long("--sandbox-cores")
             .takes_value(true)
             .help("No effect if app poisoning protections are disabled. Number of cores to dedicate for sandboxes if app poisoning protection is enabled. If not set, we use the defaults, which is to use half the cores for sandboxes."),
-    ).get_matches();
+    )
+    .arg(
+        Arg::with_name("aslr")
+            .long("--aslr")
+            .takes_value(false)
+            .help("Whether to use ASLR for wasm sandbox code pages."),
+    )
+    .get_matches();
 
     let sandbox_cores = matches.value_of("sandbox_cores").map(|t| t.parse::<usize>().unwrap());
     cranelift_spectre::runtime::use_spectre_mitigation_core_partition(sandbox_cores);
+
+    let aslr = matches.is_present("aslr");
+    if aslr {
+        DlModule::aslr_dl_enable();
+    }
 
     let mut module_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     module_path.push("modules");

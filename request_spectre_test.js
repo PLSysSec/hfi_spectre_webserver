@@ -74,6 +74,12 @@ async function main() {
         protections = ["spectre_cet_isol", "spectre_cet_isol_cross_sbx", "spectre_cet_isol_cross_app", "spectre_cet_isol_cross"];
     } else if (myArgs[0] == "--nocet") {
         protections = ["stock", "spectre_sfi_isol", "spectre_sfi_isol_cross_sbx", "spectre_sfi_isol_cross_app", "spectre_sfi_isol_cross"];
+    } else if (myArgs[0] == "--cetaslr") {
+        protections = ["spectre_cet_isol"];
+    } else if (myArgs[0] == "--nocetaslr") {
+        protections = ["spectre_sfi_isol"];
+    } else if (myArgs[0] == "--stock") {
+        protections = ["stock"];
     } else {
         console.log("Expected one arg [--cet|--nocet]");
         process.exit(1);
