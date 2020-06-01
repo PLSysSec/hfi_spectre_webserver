@@ -1,23 +1,26 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
-#[macro_use] extern crate clap;
+#[macro_use]
+extern crate clap;
 
 use anyhow::Error;
 use clap::Arg;
+use lazy_static::lazy_static;
 use libc::c_char;
 use lucet_runtime::DlModule;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
-use rocket::{ Request };
-use rocket::data::{ Data, FromDataSimple, Outcome };
-use rocket::http::{ RawStr, Status };
-use rocket::Outcome::{ Failure, Success };
-use rocket::response::{ Stream, content};
+use rocket::data::{Data, FromDataSimple, Outcome};
+use rocket::http::{RawStr, Status};
+use rocket::response::{content, Stream};
+use rocket::Outcome::{Failure, Success};
+use rocket::Request;
 use std::cell::RefCell;
 use std::ffi::CStr;
 use std::io;
-use std::io::{ Read, Stdin };
+use std::io::{Read, Stdin};
 use std::path::PathBuf;
 use std::slice;
 
@@ -31,7 +34,7 @@ fn index() -> &'static str {
 
 #[get("/bytes")]
 fn bytes() -> content::Plain<Vec<u8>> {
-    let a  = vec![ 48, 49, 50 ];
+    let a = vec![48, 49, 50];
     content::Plain(a)
 }
 
@@ -45,7 +48,7 @@ fn stream() -> Stream<Stdin> {
 pub enum ModuleResult {
     None,
     ByteArray(Vec<u8>),
-    String(String)
+    String(String),
 }
 
 thread_local! {
@@ -57,14 +60,10 @@ thread_local! {
 pub extern "C" fn server_module_bytearr_result(vmctx: &mut Vmctx, byte_arr: u32, bytes: u32) {
     let heap = vmctx.heap();
     let byte_arr_ptr = heap.as_ptr() as usize + byte_arr as usize;
-    let response_slice = unsafe {
-        slice::from_raw_parts(
-            byte_arr_ptr as *const u8,
-            bytes as usize
-        )
-    };
+    let response_slice =
+        unsafe { slice::from_raw_parts(byte_arr_ptr as *const u8, bytes as usize) };
     let v = response_slice.to_vec();
-    CURRENT_RESULT.with(|current_result|{
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::ByteArray(v);
     });
 }
@@ -77,8 +76,8 @@ pub extern "C" fn server_module_string_result(vmctx: &mut Vmctx, string_resp: u3
     let char_ptr = byte_arr_ptr as *const c_char;
     let c_str: &CStr = unsafe { CStr::from_ptr(char_ptr) };
     let str_slice: &str = c_str.to_str().unwrap();
-    let str_buf: String = str_slice.to_owned();  // if necessary
-    CURRENT_RESULT.with(|current_result|{
+    let str_buf: String = str_slice.to_owned(); // if necessary
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::String(str_buf);
     });
 }
@@ -91,10 +90,15 @@ struct JPEGResponder {
 
 #[get("/jpeg_resize_c?<quality>&<protection>")]
 fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder, Error> {
-
     let input: Vec<String> = vec!["".to_string(), quality.to_string()];
-    let instance = wasm_module::create_wasm_instance("jpeg_resize_c".to_string(), protection.to_string(), input);
-    CURRENT_RESULT.with(|current_result|{
+    let instance = wasm_module::create_wasm_instance(
+        "jpeg_resize_c".to_string(),
+        protection.to_string(),
+        input,
+        unsafe { ASLR.clone() },
+        MODULE_PATH.clone(),
+    );
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
     });
 
@@ -103,13 +107,9 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
         panic!("wasm module yielded?");
     }
 
-    let ret = CURRENT_RESULT.with(|current_result|{
+    let ret = CURRENT_RESULT.with(|current_result| {
         let r = match &*current_result.borrow() {
-            ModuleResult::ByteArray(b) => {
-                JPEGResponder {
-                    bytes: b.clone()
-                }
-            },
+            ModuleResult::ByteArray(b) => JPEGResponder { bytes: b.clone() },
             _ => {
                 panic!("Unexpected response from module");
             }
@@ -122,10 +122,15 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
 
 #[get("/msghash_check_c?<msg>&<hash>&<protection>")]
 fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<String, Error> {
-
     let input: Vec<String> = vec!["".to_string(), msg.to_string(), hash.to_string()];
-    let instance = wasm_module::create_wasm_instance("msghash_check_c".to_string(), protection.to_string(), input);
-    CURRENT_RESULT.with(|current_result|{
+    let instance = wasm_module::create_wasm_instance(
+        "msghash_check_c".to_string(),
+        protection.to_string(),
+        input,
+        unsafe { ASLR.clone() },
+        MODULE_PATH.clone(),
+    );
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
     });
 
@@ -134,11 +139,9 @@ fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<S
         panic!("wasm module yielded?");
     }
 
-    let ret = CURRENT_RESULT.with(|current_result|{
+    let ret = CURRENT_RESULT.with(|current_result| {
         let r = match &*current_result.borrow() {
-            ModuleResult::String(s) => {
-                s.clone()
-            },
+            ModuleResult::String(s) => s.clone(),
             _ => {
                 panic!("Unexpected response from module");
             }
@@ -151,10 +154,15 @@ fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<S
 
 #[get("/fib_c?<num>&<protection>")]
 fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
-
     let input: Vec<String> = vec!["".to_string(), num.to_string()];
-    let instance = wasm_module::create_wasm_instance("fib_c".to_string(), protection.to_string(), input);
-    CURRENT_RESULT.with(|current_result|{
+    let instance = wasm_module::create_wasm_instance(
+        "fib_c".to_string(),
+        protection.to_string(),
+        input,
+        unsafe { ASLR.clone() },
+        MODULE_PATH.clone(),
+    );
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
     });
 
@@ -163,11 +171,9 @@ fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
         panic!("wasm module yielded?");
     }
 
-    let ret = CURRENT_RESULT.with(|current_result|{
+    let ret = CURRENT_RESULT.with(|current_result| {
         let r = match &*current_result.borrow() {
-            ModuleResult::String(s) => {
-                s.clone()
-            },
+            ModuleResult::String(s) => s.clone(),
             _ => {
                 panic!("Unexpected response from module");
             }
@@ -180,10 +186,15 @@ fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
 
 #[get("/html_template?<protection>")]
 fn html_template(protection: &RawStr) -> Result<String, Error> {
-
     let input: Vec<String> = vec!["".to_string()];
-    let instance = wasm_module::create_wasm_instance("html_template".to_string(), protection.to_string(), input);
-    CURRENT_RESULT.with(|current_result|{
+    let instance = wasm_module::create_wasm_instance(
+        "html_template".to_string(),
+        protection.to_string(),
+        input,
+        unsafe { ASLR.clone() },
+        MODULE_PATH.clone(),
+    );
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
     });
 
@@ -192,11 +203,9 @@ fn html_template(protection: &RawStr) -> Result<String, Error> {
         panic!("wasm module yielded?");
     }
 
-    let ret = CURRENT_RESULT.with(|current_result|{
+    let ret = CURRENT_RESULT.with(|current_result| {
         let r = match &*current_result.borrow() {
-            ModuleResult::String(s) => {
-                s.clone()
-            },
+            ModuleResult::String(s) => s.clone(),
             _ => {
                 panic!("Unexpected response from jpeg module");
             }
@@ -222,14 +231,19 @@ impl FromDataSimple for StringCopy {
     }
 }
 
-#[post("/xml_to_json?<protection>", data="<xml>")]
+#[post("/xml_to_json?<protection>", data = "<xml>")]
 fn xml_to_json(xml: StringCopy, protection: &RawStr) -> Result<String, Error> {
-
     let str_data: String = xml.0;
     let xml_decoded = percent_encoding::percent_decode_str(&str_data).decode_utf8()?;
     let input: Vec<String> = vec!["".to_string(), xml_decoded.to_string()];
-    let instance = wasm_module::create_wasm_instance("xml_to_json".to_string(), protection.to_string(), input);
-    CURRENT_RESULT.with(|current_result|{
+    let instance = wasm_module::create_wasm_instance(
+        "xml_to_json".to_string(),
+        protection.to_string(),
+        input,
+        unsafe { ASLR.clone() },
+        MODULE_PATH.clone(),
+    );
+    CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
     });
 
@@ -238,11 +252,9 @@ fn xml_to_json(xml: StringCopy, protection: &RawStr) -> Result<String, Error> {
         panic!("wasm module yielded?");
     }
 
-    let ret = CURRENT_RESULT.with(|current_result|{
+    let ret = CURRENT_RESULT.with(|current_result| {
         let r = match &*current_result.borrow() {
-            ModuleResult::String(s) => {
-                s.clone()
-            },
+            ModuleResult::String(s) => s.clone(),
             _ => {
                 panic!("Unexpected response from module");
             }
@@ -257,6 +269,16 @@ fn xml_to_json(xml: StringCopy, protection: &RawStr) -> Result<String, Error> {
 pub extern "C" fn ensure_linked() {
     lucet_runtime::lucet_internal_ensure_linked();
     lucet_wasi::export_wasi_funcs();
+}
+
+static mut ASLR: bool = false;
+
+lazy_static! {
+    static ref MODULE_PATH: PathBuf = {
+        let mut m = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        m.push("modules");
+        m
+    };
 }
 
 fn main() {
@@ -277,21 +299,37 @@ fn main() {
     )
     .get_matches();
 
-    let sandbox_cores = matches.value_of("sandbox_cores").map(|t| t.parse::<usize>().unwrap());
+    let sandbox_cores = matches
+        .value_of("sandbox_cores")
+        .map(|t| t.parse::<usize>().unwrap());
     cranelift_spectre::runtime::use_spectre_mitigation_core_partition(sandbox_cores);
 
     let aslr = matches.is_present("aslr");
     if aslr {
+        unsafe {
+            ASLR = true;
+        }
         DlModule::aslr_dl_enable();
     }
 
-    let mut module_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    module_path.push("modules");
+    let module_path = MODULE_PATH.clone();
     println!("module directory: {:?}", module_path);
 
     service_directory::load_dir(module_path).unwrap();
 
     rocket::ignite()
-    .mount("/", routes![index, bytes, stream, jpeg_resize_c, msghash_check_c, fib_c, html_template, xml_to_json])
-    .launch();
+        .mount(
+            "/",
+            routes![
+                index,
+                bytes,
+                stream,
+                jpeg_resize_c,
+                msghash_check_c,
+                fib_c,
+                html_template,
+                xml_to_json
+            ],
+        )
+        .launch();
 }

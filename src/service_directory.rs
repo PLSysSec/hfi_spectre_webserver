@@ -8,9 +8,8 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 lazy_static! {
-    static ref MODULE_MAP : RwLock<HashMap<String, Arc<DlModule>>> = RwLock::new(HashMap::new());
+    static ref MODULE_MAP: RwLock<HashMap<String, Arc<DlModule>>> = RwLock::new(HashMap::new());
 }
-
 
 /// Load services from a directory in the filesystem.
 /// Lucet compiles Wasm modules to native code in `.so` files. Load all `.so` files in a
@@ -34,7 +33,10 @@ pub fn load_dir<P: AsRef<Path>>(dir: P) -> Result<(), Error> {
                     println!("Found module {}", basename);
                     mapg.insert(basename, dl_module);
                 } else {
-                    println!("Could not load module: {}", file.file_name().unwrap().to_str().unwrap());
+                    println!(
+                        "Could not load module: {}",
+                        file.file_name().unwrap().to_str().unwrap()
+                    );
                 }
             }
         }
@@ -47,4 +49,3 @@ pub fn get_module(name: &str) -> Option<Arc<DlModule>> {
     let mapg = MODULE_MAP.read().unwrap();
     mapg.get(name).cloned()
 }
-
