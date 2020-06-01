@@ -306,6 +306,7 @@ fn main() {
 
     let aslr = matches.is_present("aslr");
     if aslr {
+        println!("Enabling ASLR for wasm modules");
         unsafe {
             ASLR = true;
         }
