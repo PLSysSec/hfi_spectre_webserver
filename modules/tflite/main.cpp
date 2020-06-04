@@ -33,6 +33,79 @@ float getRandFloat(std::default_random_engine engine) {
   return dist(engine);
 }
 
+// Empirically, this endianness correction is necessary for the bmp height and width fields
+int endianness_correct(int input) {
+  unsigned int uinput = (unsigned int) input;
+  unsigned char byte_0 = uinput & 0xFF;
+  unsigned char byte_1 = (uinput >> 8) & 0xFF;
+  unsigned char byte_2 = (uinput >> 16) & 0xFF;
+  unsigned char byte_3 = (uinput >> 24) & 0xFF;
+  unsigned int uoutput = (byte_2 << 24) | (byte_3 << 16) | (byte_0 << 8) | byte_1;
+  // also we shave off the top 16 bits, as our bitmap seems to have junk data there in the
+  // height field, despite the spec I found on wikipedia
+  uoutput &= 0xFFFF;
+  return (int) uoutput;
+}
+
+// Fills `buffer` with the contents of (just the raw pixel data from) `bitmap`
+// When this function returns, `buffer` will contain three `float` values per
+// pixel, corresponding to the R, G, and B values (in that order), with each
+// float in the range [0.0, 1.0].
+void readBitmapToBuffer(
+    FILE* bitmap,
+    float* buffer,
+    int expected_width,
+    int expected_height
+) {
+  // thanks to https://stackoverflow.com/questions/9296059/read-pixel-value-in-bmp-file
+  // for examples of reading bitmaps in C++
+
+  // read header
+  const int HEADER_SIZE = 54;
+  unsigned char info[HEADER_SIZE];
+  fread(info, sizeof(unsigned char), 54, bitmap);
+  const int found_width = endianness_correct(*(int*)&info[18]);
+  const int found_height = endianness_correct(*(int*)&info[22]);
+  if (found_width != expected_width) {
+    PANIC("Found bitmap width %i, expected %i\n", found_width, expected_width);
+  }
+  if (found_height != expected_height) {
+    PANIC("Found bitmap height %i, expected %i\n", found_height, expected_height);
+  }
+  /*
+  const int data_start_offset = *(int*)&info[0x0A];
+  if (data_start_offset != HEADER_SIZE) {
+    PANIC("Found data_start_offset %i, expected %i\n", data_start_offset, HEADER_SIZE);
+  }
+  */
+
+  // read the rest of the raw data
+  const int remaining_bytes = found_width * found_height * 3;  // 3 bytes per pixel
+  unsigned char* bmp_data = (unsigned char*) malloc(remaining_bytes);
+  if (bmp_data == nullptr) {
+    PANIC("Failed to allocate buffer for bitmap data\n");
+  }
+  fread(bmp_data, sizeof(unsigned char), remaining_bytes, bitmap);
+  fclose(bitmap);
+
+  for (int y = 0; y < found_height; y++) {
+    for (int x = 0; x < found_width; x++) {
+      const unsigned idx = (y * found_width + x) * 3;  // index of this pixel in both `bmp_data` and `buffer`
+      //float red = getRandFloat(generator);
+      //float green = getRandFloat(generator);
+      //float blue = getRandFloat(generator);
+      const float red = bmp_data[idx + 2] / 255.0;  // +2 because bmps are apparently stored B,G,R
+      const float green = bmp_data[idx + 1] / 255.0;
+      const float blue = bmp_data[idx] / 255.0;
+      buffer[idx] = red;
+      buffer[idx + 1] = green;
+      buffer[idx + 2] = blue;
+    }
+  }
+
+  free(bmp_data);
+}
+
 #ifdef STUB_EXCEPTIONS
 extern "C" {
 void* __cxa_allocate_exception(size_t size) {
@@ -66,7 +139,7 @@ std::vector<ImageNetResult> get_imagenet_classes() {
 
 int main(int argc, char* argv[]) {
 
-  /* for now we don't use an input image - see more comments below
+  /* for now we simply hardcode the image filename
   if (argc <= 1) {
     PANIC("Not enough arguments: expected an image filename\n");
   }
@@ -75,6 +148,7 @@ int main(int argc, char* argv[]) {
     PANIC("Too many arguments: expected just one, an image filename\n");
   }
   */
+  const char image_filename[] = "banana-bitmap.bmp";
 
   TfLiteStatus retcode;
 
@@ -119,7 +193,7 @@ int main(int argc, char* argv[]) {
   // This model apparently expects images which are 280x280 pixels
   const int X_MAX = 280;
   const int Y_MAX = 280;
-  printf("Loading inputs...\n");
+  printf("Loading image data...\n");
   TfLiteTensor* input = interpreter->input(0);
   if (input == nullptr) {
     PANIC("Failed to get input tensor\n");
@@ -142,20 +216,10 @@ int main(int argc, char* argv[]) {
   if (input->type != kTfLiteFloat32) {
     PANIC("Expected input type to be 32-bit float\n");
   }
-  for (int x = 0; x < X_MAX; x++) {
-    for (int y = 0; y < Y_MAX; y++) {
-      // This model expects R, G, and B values as floats in the range [0.0, 1.0].
-      // For now we just generate random values
-      float red = getRandFloat(generator);
-      float green = getRandFloat(generator);
-      float blue = getRandFloat(generator);
-      // it's very possible that I have the colors switched around and/or the
-      // axes transposed
-      input->data.f[(x * X_MAX + y) * 3] = red;
-      input->data.f[(x * X_MAX + y) * 3 + 1] = green;
-      input->data.f[(x * X_MAX + y) * 3 + 2] = blue;
-    }
-  }
+  // load in the actual data
+  FILE* f = fopen(image_filename, "rb");
+  // input->dims->data.f[idx] = ...
+  readBitmapToBuffer(f, interpreter->typed_input_tensor<float>(0), X_MAX, Y_MAX);
   printf("Loaded\n");
 
   // Actually run inference.
