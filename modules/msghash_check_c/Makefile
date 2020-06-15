@@ -6,12 +6,12 @@ WASM_LD=/opt/wasi-sdk/bin/wasm-ld
 WASM_HOST=--host=wasm32-wasi
 WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
 
-build: ../msghash_check_c.wasm
+build: ../msghash_check_c$(WASM_OUT_SUFFIX).wasm
 
 ./libsodium/Makefile:
 	tax -xf ./libsodium.tar.xz
 
-../msghash_check_c.wasm: msghash_check.cpp ./libsodium/Makefile
+../msghash_check_c$(WASM_OUT_SUFFIX).wasm: msghash_check.cpp ./libsodium/Makefile
 	cd libsodium && $(MAKE)
 	$(WASM_CC)++ $(WASM_CFLAGS) msghash_check.cpp -I libsodium/src/libsodium/include libsodium/src/libsodium/.libs/libsodium.a -o $@
 

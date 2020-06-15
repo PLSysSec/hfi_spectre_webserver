@@ -6,7 +6,6 @@ WASM_CXX=/opt/wasi-sdk/bin/clang++
 WASM_AR=/opt/wasi-sdk/bin/llvm-ar
 WASM_RANLIB=/opt/wasi-sdk/bin/ranlib
 WASM_LD=/opt/wasi-sdk/bin/wasm-ld
-WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
 
 TENSORFLOW_MICRO_DIR=./tensorflow/tensorflow/lite/micro
 TENSORFLOW_DOWNLOADS_DIR=$(TENSORFLOW_MICRO_DIR)/tools/make/downloads
@@ -25,9 +24,9 @@ NATIVE_LDFLAGS=-L$(LIBDIR) -ltensorflow-microlite
 WASM_LDFLAGS=-L$(LIBDIR) -ltensorflow-microlite
 
 .PHONY: build
-build: $(CURR_DIR)/../tflite.wasm
+build: $(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm
 
-$(CURR_DIR)/../tflite.wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(LIBDIR)/libtensorflow-microlite.a
+$(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(LIBDIR)/libtensorflow-microlite.a
 	$(WASM_CXX) $(CXXFLAGS) -DSTUB_EXCEPTIONS $< $(MODELFILE_WASM).o -o $@ $(WASM_LDFLAGS)
 
 # A successful native build will also require the env var NO_WASM to be set

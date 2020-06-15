@@ -3,14 +3,13 @@
 #[macro_use]
 extern crate rocket;
 
-#[macro_use]
-extern crate clap;
+// #[macro_use]
+// extern crate clap;
+// use clap::Arg;
 
 use anyhow::Error;
-use clap::Arg;
 use lazy_static::lazy_static;
 use libc::c_char;
-use lucet_runtime::DlModule;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
 use rocket::data::{Data, FromDataSimple, Outcome};
 use rocket::http::{RawStr, Status};
@@ -90,12 +89,14 @@ struct JPEGResponder {
 
 #[get("/jpeg_resize_c?<quality>&<protection>")]
 fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
     let input: Vec<String> = vec!["".to_string(), quality.to_string()];
     let instance = wasm_module::create_wasm_instance(
         "jpeg_resize_c".to_string(),
-        protection.to_string(),
+        protection,
         input,
-        unsafe { ASLR.clone() },
+        aslr,
         MODULE_PATH.clone(),
     );
     CURRENT_RESULT.with(|current_result| {
@@ -122,12 +123,14 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
 
 #[get("/msghash_check_c?<msg>&<hash>&<protection>")]
 fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<String, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
     let input: Vec<String> = vec!["".to_string(), msg.to_string(), hash.to_string()];
     let instance = wasm_module::create_wasm_instance(
         "msghash_check_c".to_string(),
-        protection.to_string(),
+        protection,
         input,
-        unsafe { ASLR.clone() },
+        aslr,
         MODULE_PATH.clone(),
     );
     CURRENT_RESULT.with(|current_result| {
@@ -154,12 +157,14 @@ fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<S
 
 #[get("/fib_c?<num>&<protection>")]
 fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
     let input: Vec<String> = vec!["".to_string(), num.to_string()];
     let instance = wasm_module::create_wasm_instance(
         "fib_c".to_string(),
-        protection.to_string(),
+        protection,
         input,
-        unsafe { ASLR.clone() },
+        aslr,
         MODULE_PATH.clone(),
     );
     CURRENT_RESULT.with(|current_result| {
@@ -186,12 +191,14 @@ fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
 
 #[get("/html_template?<protection>")]
 fn html_template(protection: &RawStr) -> Result<String, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
     let input: Vec<String> = vec!["".to_string()];
     let instance = wasm_module::create_wasm_instance(
         "html_template".to_string(),
-        protection.to_string(),
+        protection,
         input,
-        unsafe { ASLR.clone() },
+        aslr,
         MODULE_PATH.clone(),
     );
     CURRENT_RESULT.with(|current_result| {
@@ -233,14 +240,16 @@ impl FromDataSimple for StringCopy {
 
 #[post("/xml_to_json?<protection>", data = "<xml>")]
 fn xml_to_json(xml: StringCopy, protection: &RawStr) -> Result<String, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
     let str_data: String = xml.0;
     let xml_decoded = percent_encoding::percent_decode_str(&str_data).decode_utf8()?;
     let input: Vec<String> = vec!["".to_string(), xml_decoded.to_string()];
     let instance = wasm_module::create_wasm_instance(
         "xml_to_json".to_string(),
-        protection.to_string(),
+        protection,
         input,
-        unsafe { ASLR.clone() },
+        aslr,
         MODULE_PATH.clone(),
     );
     CURRENT_RESULT.with(|current_result| {
@@ -271,8 +280,6 @@ pub extern "C" fn ensure_linked() {
     lucet_wasi::export_wasi_funcs();
 }
 
-static mut ASLR: bool = false;
-
 lazy_static! {
     static ref MODULE_PATH: PathBuf = {
         let mut m = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -283,35 +290,6 @@ lazy_static! {
 
 fn main() {
     ensure_linked();
-
-    let matches = app_from_crate!()
-    .arg(
-        Arg::with_name("sandbox_cores")
-            .long("--sandbox-cores")
-            .takes_value(true)
-            .help("No effect if app poisoning protections are disabled. Number of cores to dedicate for sandboxes if app poisoning protection is enabled. If not set, we use the defaults, which is to use half the cores for sandboxes."),
-    )
-    .arg(
-        Arg::with_name("aslr")
-            .long("--aslr")
-            .takes_value(false)
-            .help("Whether to use ASLR for wasm sandbox code pages."),
-    )
-    .get_matches();
-
-    let sandbox_cores = matches
-        .value_of("sandbox_cores")
-        .map(|t| t.parse::<usize>().unwrap());
-    cranelift_spectre::runtime::use_spectre_mitigation_core_partition(sandbox_cores);
-
-    let aslr = matches.is_present("aslr");
-    if aslr {
-        println!("Enabling ASLR for wasm modules");
-        unsafe {
-            ASLR = true;
-        }
-        DlModule::aslr_dl_enable();
-    }
 
     let module_path = MODULE_PATH.clone();
     println!("module directory: {:?}", module_path);

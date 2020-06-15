@@ -17,7 +17,7 @@ pub fn create_wasm_instance<P: AsRef<Path>>(
     let module = if aslr {
         let filename = module_name + ".so";
         let path = dir.as_ref().join(filename);
-        DlModule::load(&path).unwrap()
+        DlModule::load_aslr(&path, true).unwrap()
     } else {
         service_directory::get_module(&module_name).unwrap()
     };

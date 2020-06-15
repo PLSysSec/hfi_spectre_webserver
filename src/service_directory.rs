@@ -18,9 +18,10 @@ pub fn load_dir<P: AsRef<Path>>(dir: P) -> Result<(), Error> {
     let mut mapg = MODULE_MAP.write().unwrap();
     for entry in fs::read_dir(dir.as_ref())? {
         let file = entry?.path();
-        if let Some(ext) = file.extension() {
+        if let (Some(ext), Some(filename)) = (file.extension(), file.file_name()) {
             if ext == "so" {
-                let dl_module_load = DlModule::load(&file);
+                let aslr_enabled = filename.to_str().unwrap().contains("_aslr");
+                let dl_module_load = DlModule::load_aslr(&file, aslr_enabled);
                 if dl_module_load.is_ok() {
                     let dl_module = dl_module_load?;
 

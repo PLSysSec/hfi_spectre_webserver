@@ -1,7 +1,6 @@
 WASM_CC=/opt/wasi-sdk/bin/clang
 WASM_CXX=/opt/wasi-sdk/bin/clang++
-WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
-build: ../jpeg_resize_c.wasm
+build: ../jpeg_resize_c$(WASM_OUT_SUFFIX).wasm
 
 JPEG_FILES=./libjpeg/jaricom.c ./libjpeg/jcapimin.c ./libjpeg/jcapistd.c ./libjpeg/jcarith.c ./libjpeg/jccoefct.c ./libjpeg/jccolor.c ./libjpeg/jcdctmgr.c ./libjpeg/jchuff.c ./libjpeg/jcinit.c ./libjpeg/jcmainct.c ./libjpeg/jcmarker.c ./libjpeg/jcmaster.c ./libjpeg/jcomapi.c \
 ./libjpeg/jcparam.c ./libjpeg/jcprepct.c ./libjpeg/jcsample.c ./libjpeg/jctrans.c ./libjpeg/jdapimin.c ./libjpeg/jdapistd.c ./libjpeg/jdarith.c ./libjpeg/jdatadst.c ./libjpeg/jdatasrc.c ./libjpeg/jdcoefct.c ./libjpeg/jdcolor.c ./libjpeg/jddctmgr.c ./libjpeg/jdhuff.c \
@@ -15,5 +14,5 @@ test_bytes.h: image.jpeg
 	hexdump -ve '1/1 "0x%.2x, "' $< >> $@
 	echo "0x00 };" >> $@
 
-../jpeg_resize_c.wasm: jpeg_resize_c.c $(JPEG_FILES) test_bytes.h
+../jpeg_resize_c$(WASM_OUT_SUFFIX).wasm: jpeg_resize_c.c $(JPEG_FILES) test_bytes.h
 	$(WASM_CC) $(WASM_CFLAGS) $(JPEG_FILES) jpeg_resize_c.c -Wno-deprecated-declarations -I . -I libjpeg -o $@
