@@ -27,7 +27,7 @@ WASM_LDFLAGS=-L$(LIBDIR) -ltensorflow-microlite
 build: $(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm
 
 $(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(LIBDIR)/libtensorflow-microlite.a
-	$(WASM_CXX) $(CXXFLAGS) -DSTUB_EXCEPTIONS $< $(MODELFILE_WASM).o -o $@ $(WASM_LDFLAGS)
+	$(WASM_CXX) $(WASM_CFLAGS) $(CXXFLAGS) -DSTUB_EXCEPTIONS $< $(MODELFILE_WASM).o -o $@ $(WASM_LDFLAGS) -D INPUT_FILENAME='"$(CURR_DIR)/banana-bitmap.bmp"'
 
 # A successful native build will also require the env var NO_WASM to be set
 # and you might have to clean if you've previously done a wasm build

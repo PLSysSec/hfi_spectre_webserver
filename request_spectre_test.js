@@ -110,6 +110,11 @@ async function main() {
             inputs: "quality=20",
             duration: 180
         },
+        {
+            module: "tflite",
+            inputs: "",
+            duration: 180
+        },
     ]);
     var filename = "results.json";
     console.log("Writing results of benchmarking to file: " + filename);

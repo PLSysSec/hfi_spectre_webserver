@@ -98,6 +98,7 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
         input,
         aslr,
         MODULE_PATH.clone(),
+        false,
     );
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
@@ -132,6 +133,7 @@ fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<S
         input,
         aslr,
         MODULE_PATH.clone(),
+        false,
     );
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
@@ -166,6 +168,7 @@ fn fib_c(num: &RawStr, protection: &RawStr) -> Result<String, Error> {
         input,
         aslr,
         MODULE_PATH.clone(),
+        false,
     );
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
@@ -200,6 +203,7 @@ fn html_template(protection: &RawStr) -> Result<String, Error> {
         input,
         aslr,
         MODULE_PATH.clone(),
+        false,
     );
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
@@ -215,6 +219,41 @@ fn html_template(protection: &RawStr) -> Result<String, Error> {
             ModuleResult::String(s) => s.clone(),
             _ => {
                 panic!("Unexpected response from jpeg module");
+            }
+        };
+        *current_result.borrow_mut() = ModuleResult::None;
+        return r;
+    });
+    Ok(ret)
+}
+
+#[get("/tflite?<protection>")]
+fn tflite(protection: &RawStr) -> Result<String, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
+    let input: Vec<String> = vec!["".to_string()];
+    let instance = wasm_module::create_wasm_instance(
+        "tflite".to_string(),
+        protection,
+        input,
+        aslr,
+        MODULE_PATH.clone(),
+        true,
+    );
+    CURRENT_RESULT.with(|current_result| {
+        *current_result.borrow_mut() = ModuleResult::None;
+    });
+
+    let result = instance?.run(lucet_wasi::START_SYMBOL, &[])?;
+    if !result.is_returned() {
+        panic!("wasm module yielded?");
+    }
+
+    let ret = CURRENT_RESULT.with(|current_result| {
+        let r = match &*current_result.borrow() {
+            ModuleResult::String(s) => s.clone(),
+            _ => {
+                panic!("Unexpected response from tflite module");
             }
         };
         *current_result.borrow_mut() = ModuleResult::None;
@@ -251,6 +290,7 @@ fn xml_to_json(xml: StringCopy, protection: &RawStr) -> Result<String, Error> {
         input,
         aslr,
         MODULE_PATH.clone(),
+        false,
     );
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::None;
@@ -307,6 +347,7 @@ fn main() {
                 msghash_check_c,
                 fib_c,
                 html_template,
+                tflite,
                 xml_to_json
             ],
         )

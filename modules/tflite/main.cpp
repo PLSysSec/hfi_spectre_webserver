@@ -18,6 +18,8 @@ extern "C" {
 #include "ImageNetLabels.h"
 }
 
+#include "../server_hostcalls.h"
+
 #define KILO (1024)
 #define MEGA (KILO * KILO)
 #define GIGA (KILO * MEGA)
@@ -148,7 +150,11 @@ int main(int argc, char* argv[]) {
     PANIC("Too many arguments: expected just one, an image filename\n");
   }
   */
-  const char image_filename[] = "banana-bitmap.bmp";
+ #ifndef INPUT_FILENAME
+ #define INPUT_FILENAME "banana-bitmap.bmp"
+ #endif
+
+  const char image_filename[] = INPUT_FILENAME;
 
   TfLiteStatus retcode;
 
@@ -156,7 +162,7 @@ int main(int argc, char* argv[]) {
   generator.seed(time(NULL));
 
   // Load the model
-  printf("Loading model...\n");
+  //printf("Loading model...\n");
   const tflite::Model* const model = ::tflite::GetModel(get_model_data());
   if (model == nullptr) {
     PANIC("Failed to load the model\n");
@@ -164,7 +170,7 @@ int main(int argc, char* argv[]) {
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     PANIC("Model has the wrong schema version: expected %u, got %u\n", TFLITE_SCHEMA_VERSION, model->version());
   }
-  printf("Loaded\n");
+  //printf("Loaded\n");
 
   // Build the interpreter
   tflite::ops::micro::AllOpsResolver resolver;  // this uses more mem than necessary, we could cherry-pick ops
@@ -193,7 +199,7 @@ int main(int argc, char* argv[]) {
   // This model apparently expects images which are 280x280 pixels
   const int X_MAX = 280;
   const int Y_MAX = 280;
-  printf("Loading image data...\n");
+  //printf("Loading image data...\n");
   TfLiteTensor* input = interpreter->input(0);
   if (input == nullptr) {
     PANIC("Failed to get input tensor\n");
@@ -220,15 +226,15 @@ int main(int argc, char* argv[]) {
   FILE* f = fopen(image_filename, "rb");
   // input->dims->data.f[idx] = ...
   readBitmapToBuffer(f, interpreter->typed_input_tensor<float>(0), X_MAX, Y_MAX);
-  printf("Loaded\n");
+  //printf("Loaded\n");
 
   // Actually run inference.
-  printf("Running inference...\n");
+  //printf("Running inference...\n");
   retcode = interpreter->Invoke();
   if (retcode != kTfLiteOk) {
     PANIC("Failed to run inference\n");
   }
-  printf("Complete\n");
+  //printf("Complete\n");
 
   // Collect the output
   TfLiteTensor* output = interpreter->output(0);
@@ -254,10 +260,12 @@ int main(int argc, char* argv[]) {
     results[i].probability = output->data.f[i];
   }
   std::sort(results.begin(), results.end(), &sortByProbabilityDecreasing);
-  printf("Top 5 class candidates:\n");
-  for (int i = 0; i < 5; i++) {
-    printf("%s (%.2f%%)\n", results[i].classname, 100.0 * results[i].probability);
-  }
+  //printf("Top 5 class candidates:\n");
+  // for (int i = 0; i < 5; i++) {
+  //   printf("%s (%.2f%%)\n", results[i].classname, 100.0 * results[i].probability);
+  // }
+
+  server_module_string_result(results[0].classname);
 
   return 0;
 }
