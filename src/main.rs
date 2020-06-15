@@ -86,6 +86,21 @@ pub extern "C" fn server_module_string_result(vmctx: &mut Vmctx, string_resp: u3
 struct JPEGResponder {
     bytes: Vec<u8>,
 }
+pub struct StringCopy(pub String);
+
+const LIMIT: u64 = 4 * 1024 * 1024;
+impl FromDataSimple for StringCopy {
+    type Error = String;
+
+    fn from_data(_: &Request<'_>, data: Data) -> Outcome<Self, String> {
+        let mut string = String::new();
+        if let Err(e) = data.open().take(LIMIT).read_to_string(&mut string) {
+            return Failure((Status::InternalServerError, format!("{:?}", e)));
+        }
+        Success(StringCopy(string))
+    }
+}
+
 
 #[get("/jpeg_resize_c?<quality>&<protection>")]
 fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder, Error> {
@@ -122,11 +137,13 @@ fn jpeg_resize_c(quality: &RawStr, protection: &RawStr) -> Result<JPEGResponder,
     Ok(ret)
 }
 
-#[get("/msghash_check_c?<msg>&<hash>&<protection>")]
-fn msghash_check_c(msg: &RawStr, hash: &RawStr, protection: &RawStr) -> Result<String, Error> {
+#[post("/msghash_check_c?<hash>&<protection>", data = "<msg>")]
+fn msghash_check_c(msg: StringCopy, hash: &RawStr, protection: &RawStr) -> Result<String, Error> {
     let protection = protection.to_string();
     let aslr = protection.contains("_aslr");
-    let input: Vec<String> = vec!["".to_string(), msg.to_string(), hash.to_string()];
+    let str_data: String = msg.0;
+    let msg_decoded = percent_encoding::percent_decode_str(&str_data).decode_utf8()?;
+    let input: Vec<String> = vec!["".to_string(), msg_decoded.to_string(), hash.to_string()];
     let instance = wasm_module::create_wasm_instance(
         "msghash_check_c".to_string(),
         protection,
@@ -260,21 +277,6 @@ fn tflite(protection: &RawStr) -> Result<String, Error> {
         return r;
     });
     Ok(ret)
-}
-
-pub struct StringCopy(pub String);
-
-const LIMIT: u64 = 256 * 1024;
-impl FromDataSimple for StringCopy {
-    type Error = String;
-
-    fn from_data(_: &Request<'_>, data: Data) -> Outcome<Self, String> {
-        let mut string = String::new();
-        if let Err(e) = data.open().take(LIMIT).read_to_string(&mut string) {
-            return Failure((Status::InternalServerError, format!("{:?}", e)));
-        }
-        Success(StringCopy(string))
-    }
 }
 
 #[post("/xml_to_json?<protection>", data = "<xml>")]

@@ -65,8 +65,7 @@ async function main() {
         process.exit(1);
     }
 
-    console.log("Make sure to restart the webserver on each run. Tests with core protections mess up the affinities of server threads.");
-    await sleep(5000);
+    await sleep(1000);
 
     var protections;
 
@@ -82,6 +81,9 @@ async function main() {
     var xmlContents = await fs_readFile("./request_spectre_test.xml");
     var xmlContentsStr = encodeURI(xmlContents);
 
+    var msgContents = await fs_readFile("./request_spectre_test_msg.txt");
+    var msgContentsStr = encodeURI(msgContents);
+
     var results = await runTests(protections, [
         // {
         //     module: "fib_c",
@@ -90,30 +92,30 @@ async function main() {
         // },
         {
             module: "msghash_check_c",
-            inputs: "msg=hello&hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
-            expected: "Succeeded\n",
-            duration: 180
+            inputs: "hash=2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824",
+            body: msgContentsStr,
+            duration: 60
         },
         {
             module: "html_template",
             inputs: "",
-            duration: 180
+            duration: 60
         },
         {
             module: "xml_to_json",
             inputs: "",
             body: xmlContentsStr,
-            duration: 180
+            duration: 60
         },
         {
             module: "jpeg_resize_c",
             inputs: "quality=20",
-            duration: 180
+            duration: 60
         },
         {
             module: "tflite",
             inputs: "",
-            duration: 180
+            duration: 60
         },
     ]);
     var filename = "results.json";
