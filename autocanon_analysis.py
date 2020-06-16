@@ -12,11 +12,11 @@ ARGPARSER.add_argument('-file',
 ARGPARSER.add_argument('-statistic',
     nargs='*',
     help='Values requests, latency, throughput',
-    default=['latency', 'throughput'])
+    default=['latency', 'latency', 'throughput'])
 ARGPARSER.add_argument('-metric',
     nargs='*',
     help='Values include average, mean, stddev, min, max, percentile (e.g. p90, p99_9)',
-    default=['p99', 'average'])
+    default=['average', 'p99', 'average'])
 
 def parse_results(files):
     results = {}
@@ -62,6 +62,16 @@ def main(args):
     # print workloads
     print('\\multirow{2}{1cm}{Protection} ')
     for w in workloads:
+        if w == "msghash_check_c":
+            w = "\\cdnHash"
+        elif w == "html_template":
+            w = "\\cdnTemplatedHTML"
+        elif w == "xml_to_json":
+            w = "\\cdnXMLtoJSON"
+        elif w == "jpeg_resize_c":
+            w = "\\cdnJpgQuality"
+        elif w == "tflite":
+            w = "\\cdnML"
         print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w.replace('_', '\_') + '}')
     print('\\\\\\cline{2-'+ str(num_workloads * len(args.metric) + 1) + '}\n')
     # print metric statistics
@@ -72,7 +82,7 @@ def main(args):
             elif s == "latency" and (m == "average" or m == "mean"):
                 print(' & Avg Lat ', end='\t')
             elif s == "throughput" and (m == "average" or m == "mean"):
-                print(' & Thruput ', end='\t')
+                print(' & Thru-put ', end='\t')
             else:
                 print(f' & {s}({m})'.replace('_', '\_'), end='\t')
         print('')
