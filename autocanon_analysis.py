@@ -12,11 +12,11 @@ ARGPARSER.add_argument('-file',
 ARGPARSER.add_argument('-statistic',
     nargs='*',
     help='Values requests, latency, throughput',
-    default=['latency', 'latency', 'throughput', 'throughput'])
+    default=['latency', 'throughput'])
 ARGPARSER.add_argument('-metric',
     nargs='*',
     help='Values include average, mean, stddev, min, max, percentile (e.g. p90, p99_9)',
-    default=['p99_9', 'stddev', 'average', 'stddev'])
+    default=['p99', 'average'])
 
 def parse_results(files):
     results = {}
@@ -30,15 +30,15 @@ def parse_results(files):
     return results
 
 
-def format_num(num):
-    if num < 10:
+def format_num(num, levels_deep=0):
+    if num < 10 and levels_deep != 0:
         return f'{num:.2f}', 0
-    elif num < 100:
+    elif num < 100 and levels_deep != 0:
         return f'{num:.1f}', 0
     elif num < 1000:
         return f'{num:.0f}', 0
     else:
-        res, dep = format_num(num/1000)
+        res, dep = format_num(num/1000, levels_deep+1)
         return res, int(dep) + 1
 
 def print_padded(msg, padded_len):
@@ -60,26 +60,44 @@ def main(args):
     num_workloads = len(workloads)
 
     # print workloads
-    print('\\multirow{2}{1cm}{Configuration} ')
+    print('\\multirow{2}{1cm}{Protection} ')
     for w in workloads:
         print(' & \\multicolumn{' + str(len(args.metric)) + '}{c|}{' + w.replace('_', '\_') + '}')
-    print('\\\\\\cline{2-'+ str(len(workloads) * 4 + 1) + '}\n')
+    print('\\\\\\cline{2-'+ str(num_workloads * len(args.metric) + 1) + '}\n')
     # print metric statistics
     for w in workloads:
         for s, m in zip(args.statistic, args.metric):
-            print(f' & {s}({m})'.replace('_', '\_'), end='\t')
+            if s == "latency":
+                print(' & Tail Lat ', end='\t')
+            elif s == "throughput":
+                print(' & Thruput ', end='\t')
+            else:
+                print(f' & {s}({m})'.replace('_', '\_'), end='\t')
         print('')
     print('\\\\\\hline\n')
 
     for r in configurations:
-        print(f'{r} '.replace('_', '\_'))
+        if r == "stock":
+            print("Stock --- unsafe")
+        elif r == "spectre_sfi_aslr":
+            print("\\sysDesignOne with ASLR")
+        elif r == "spectre_sfi_full":
+            print("\\sysDesignOne deterministic (CBP-to-BTB)")
+        elif r == "spectre_cet_aslr":
+            print("\\sysDesignTwo with ASLR")
+        elif r == "spectre_cet_full":
+            print("\\sysDesignTwo deterministic (Interlock)")
+        else:
+            print(f'{r} '.replace('_', '\_'))
+
         for w in workloads:
             for s, m in zip(args.statistic, args.metric):
                 if m != 'stddev':
                     lres = float(results[r][w][s][m])
                     form, dep = format_num(lres)
                     k_names = ['', 'k', 'm']
-                    print_padded(f' & {form}{k_names[dep]}', 15)
+                    unit = ' ms' if s == "latency" else ''
+                    print_padded(f' & {form}{k_names[dep]}{unit}', 15)
                 else:
                     stddev = float(results[r][w][s][m])
                     avg = float(results[r][w][s]['average'])
