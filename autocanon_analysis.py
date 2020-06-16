@@ -67,9 +67,9 @@ def main(args):
     # print metric statistics
     for w in workloads:
         for s, m in zip(args.statistic, args.metric):
-            if s == "latency":
+            if s == "latency" and m == "p99":
                 print(' & Tail Lat ', end='\t')
-            elif s == "throughput":
+            elif s == "throughput" and (m == "average" or m == "mean"):
                 print(' & Thruput ', end='\t')
             else:
                 print(f' & {s}({m})'.replace('_', '\_'), end='\t')
