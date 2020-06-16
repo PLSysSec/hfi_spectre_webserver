@@ -26,6 +26,6 @@ int main(int argc, char const *argv[])
     mytemplate.setValue( "weather", "rain" );
     mytemplate.setValue( "its", 200 );
     std::string result = mytemplate.render();
-    server_module_string_result(result.c_str());
+    server_module_string_result(result.c_str(), result.length());
     return 0;
 }

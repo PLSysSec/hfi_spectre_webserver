@@ -50,6 +50,7 @@ pub fn create_wasm_instance<P: AsRef<Path>>(
     let instance = region
         .new_instance_builder(module)
         .with_embed_ctx(wasi_ctx)
+        .with_embed_ctx(protection)
         .build()?;
 
     Ok(instance)

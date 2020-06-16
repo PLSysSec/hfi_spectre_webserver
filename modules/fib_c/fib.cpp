@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <iostream>
-#include <string>
+#include <string.h>
 #include "../server_hostcalls.h"
 
 uint32_t fib(uint32_t n) {
@@ -22,7 +22,7 @@ int main(int argc, char const *argv[])
     uint32_t results = fib(n);
     char output[100];
     snprintf(output, 100, "%u\n", results);
-    server_module_string_result(output);
+    server_module_string_result(output, strlen(output));
     return 0;
 }
 

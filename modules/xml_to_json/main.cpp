@@ -19,6 +19,6 @@ int main(const int argc, const char *const argv[])
 
     auto ret = xml2json(argv[1]);
     const char* resp = ret.c_str();
-    server_module_string_result(resp);
+    server_module_string_result(resp, strlen(resp));
     return 0;
 }

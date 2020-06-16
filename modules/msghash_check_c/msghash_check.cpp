@@ -47,9 +47,10 @@ int main(int argc, char const *argv[])
     if (!same) {
         char resultString[1000];
         snprintf(resultString, 1000, "Failed: Got %s, Expected %s\n", msg_hash, hex);
-        server_module_string_result(resultString);
+        server_module_string_result(resultString, strlen(resultString));
     } else {
-        server_module_string_result("Succeeded\n");
+        const char* ret = "Succeeded\n";
+        server_module_string_result(ret, strlen(ret));
     }
     delete[] hex;
 

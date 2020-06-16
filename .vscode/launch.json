@@ -26,14 +26,17 @@
             ]
         },
         {
-            "name": "webserver",
+            "name": "webserver(gdb)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/target/debug/spectresfi_webserver",
             "args": [  ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
+            "environment": [{
+                "name": "RUST_BACKTRACE",
+                "value": "1"
+            }],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
@@ -44,5 +47,16 @@
                 }
             ]
         },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "webserver",
+            "program": "${workspaceFolder}/target/debug/spectresfi_webserver",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_BACKTRACE": "1"
+            }
+        }
     ]
 }

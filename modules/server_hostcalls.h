@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
 void server_module_bytearr_result(unsigned char* byte_arr, uint32_t bytes);
-void server_module_string_result(const char* string_resp);
+void server_module_string_result(const char* string_resp, uint32_t bytes);
 
 
 #ifdef __cplusplus

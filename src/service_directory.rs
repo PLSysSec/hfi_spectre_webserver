@@ -35,8 +35,9 @@ pub fn load_dir<P: AsRef<Path>>(dir: P) -> Result<(), Error> {
                     mapg.insert(basename, dl_module);
                 } else {
                     println!(
-                        "Could not load module: {}",
-                        file.file_name().unwrap().to_str().unwrap()
+                        "Could not load module: {}. Err: {:?}",
+                        file.file_name().unwrap().to_str().unwrap(),
+                        dl_module_load.err()
                     );
                 }
             }

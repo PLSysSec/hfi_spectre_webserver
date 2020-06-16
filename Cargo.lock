@@ -1198,6 +1198,7 @@ name = "spectresfi_webserver"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "cc",
  "clap",
  "cranelift-spectre",
  "lazy_static",
@@ -1512,6 +1513,7 @@ dependencies = [
 name = "wiggle"
 version = "0.15.0"
 dependencies = [
+ "cranelift-spectre",
  "thiserror",
  "wiggle-macro",
  "witx",

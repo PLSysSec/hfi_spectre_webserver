@@ -265,7 +265,7 @@ int main(int argc, char* argv[]) {
   //   printf("%s (%.2f%%)\n", results[i].classname, 100.0 * results[i].probability);
   // }
 
-  server_module_string_result(results[0].classname);
+  server_module_string_result(results[0].classname, strlen(results[0].classname));
 
   return 0;
 }

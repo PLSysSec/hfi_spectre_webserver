@@ -9,7 +9,6 @@ extern crate rocket;
 
 use anyhow::Error;
 use lazy_static::lazy_static;
-use libc::c_char;
 use lucet_runtime_internals::{lucet_hostcall, vmctx::Vmctx};
 use rocket::data::{Data, FromDataSimple, Outcome};
 use rocket::http::{RawStr, Status};
@@ -17,9 +16,9 @@ use rocket::response::{content, Stream};
 use rocket::Outcome::{Failure, Success};
 use rocket::Request;
 use std::cell::RefCell;
-use std::ffi::CStr;
 use std::io;
 use std::io::{Read, Stdin};
+use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::slice;
 
@@ -54,6 +53,31 @@ thread_local! {
     pub static CURRENT_RESULT: RefCell<ModuleResult> = RefCell::new(ModuleResult::None);
 }
 
+extern {
+    fn mpk_no_loop_copy(dest: *mut c_void, src: *const c_void, size: u32);
+}
+
+fn copy_data_out(response_slice: &[u8], use_mpk: bool) -> Vec<u8> {
+    if !use_mpk {
+        let v = response_slice.to_vec();
+        return v;
+    } else {
+        let bytes = response_slice.len();
+        let mut tmp: Vec<u8> = Vec::new();
+        tmp.reserve_exact(bytes);
+        let ptr = tmp.as_mut_ptr();
+        std::mem::forget(tmp);
+
+        let v =
+            unsafe {
+                mpk_no_loop_copy(ptr as *mut c_void, response_slice.as_ptr() as *const c_void, bytes as u32);
+                Vec::from_raw_parts(ptr, bytes, bytes)
+            };
+
+        return v;
+    }
+}
+
 #[lucet_hostcall]
 #[no_mangle]
 pub extern "C" fn server_module_bytearr_result(vmctx: &mut Vmctx, byte_arr: u32, bytes: u32) {
@@ -61,7 +85,11 @@ pub extern "C" fn server_module_bytearr_result(vmctx: &mut Vmctx, byte_arr: u32,
     let byte_arr_ptr = heap.as_ptr() as usize + byte_arr as usize;
     let response_slice =
         unsafe { slice::from_raw_parts(byte_arr_ptr as *const u8, bytes as usize) };
-    let v = response_slice.to_vec();
+
+    let protection = vmctx.get_embed_ctx::<String>();
+    let use_mpk = protection.contains("cet");
+    let v = copy_data_out(response_slice, use_mpk);
+
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::ByteArray(v);
     });
@@ -69,13 +97,17 @@ pub extern "C" fn server_module_bytearr_result(vmctx: &mut Vmctx, byte_arr: u32,
 
 #[lucet_hostcall]
 #[no_mangle]
-pub extern "C" fn server_module_string_result(vmctx: &mut Vmctx, string_resp: u32) {
+pub extern "C" fn server_module_string_result(vmctx: &mut Vmctx, string_resp: u32, bytes: u32) {
     let heap = vmctx.heap();
     let byte_arr_ptr = heap.as_ptr() as usize + string_resp as usize;
-    let char_ptr = byte_arr_ptr as *const c_char;
-    let c_str: &CStr = unsafe { CStr::from_ptr(char_ptr) };
-    let str_slice: &str = c_str.to_str().unwrap();
-    let str_buf: String = str_slice.to_owned(); // if necessary
+    let response_slice =
+        unsafe { slice::from_raw_parts(byte_arr_ptr as *const u8, bytes as usize) };
+
+    let protection = vmctx.get_embed_ctx::<String>();
+    let use_mpk = protection.contains("cet");
+    let v = copy_data_out(response_slice, use_mpk);
+
+    let str_buf: String = unsafe { String::from_utf8_unchecked(v) };
     CURRENT_RESULT.with(|current_result| {
         *current_result.borrow_mut() = ModuleResult::String(str_buf);
     });
