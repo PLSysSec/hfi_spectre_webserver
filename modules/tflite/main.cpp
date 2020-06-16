@@ -16,6 +16,7 @@
 extern "C" {
 #include "efficientnet_lite3_fp32_1.h"
 #include "ImageNetLabels.h"
+#include "test_bytes.h"
 }
 
 #include "../server_hostcalls.h"
@@ -54,7 +55,7 @@ int endianness_correct(int input) {
 // pixel, corresponding to the R, G, and B values (in that order), with each
 // float in the range [0.0, 1.0].
 void readBitmapToBuffer(
-    FILE* bitmap,
+    unsigned char* input,
     float* buffer,
     int expected_width,
     int expected_height
@@ -65,7 +66,7 @@ void readBitmapToBuffer(
   // read header
   const int HEADER_SIZE = 54;
   unsigned char info[HEADER_SIZE];
-  fread(info, sizeof(unsigned char), 54, bitmap);
+  memcpy(info, input, sizeof(unsigned char) * HEADER_SIZE);
   const int found_width = endianness_correct(*(int*)&info[18]);
   const int found_height = endianness_correct(*(int*)&info[22]);
   if (found_width != expected_width) {
@@ -87,8 +88,7 @@ void readBitmapToBuffer(
   if (bmp_data == nullptr) {
     PANIC("Failed to allocate buffer for bitmap data\n");
   }
-  fread(bmp_data, sizeof(unsigned char), remaining_bytes, bitmap);
-  fclose(bitmap);
+  memcpy(bmp_data, input + HEADER_SIZE, sizeof(unsigned char) * remaining_bytes);
 
   for (int y = 0; y < found_height; y++) {
     for (int x = 0; x < found_width; x++) {
@@ -223,9 +223,9 @@ int main(int argc, char* argv[]) {
     PANIC("Expected input type to be 32-bit float\n");
   }
   // load in the actual data
-  FILE* f = fopen(image_filename, "rb");
+  // FILE* f = fopen(image_filename, "rb");
   // input->dims->data.f[idx] = ...
-  readBitmapToBuffer(f, interpreter->typed_input_tensor<float>(0), X_MAX, Y_MAX);
+  readBitmapToBuffer(inputData, interpreter->typed_input_tensor<float>(0), X_MAX, Y_MAX);
   //printf("Loaded\n");
 
   // Actually run inference.

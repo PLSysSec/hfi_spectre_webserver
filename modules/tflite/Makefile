@@ -26,12 +26,17 @@ WASM_LDFLAGS=-L$(LIBDIR) -ltensorflow-microlite
 .PHONY: build
 build: $(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm
 
-$(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(LIBDIR)/libtensorflow-microlite.a
+$(CURR_DIR)/../tflite$(WASM_OUT_SUFFIX).wasm: main.cpp $(MODELFILE).h $(MODELFILE_WASM).o $(LIBDIR)/libtensorflow-microlite.a test_bytes.h
 	$(WASM_CXX) $(WASM_CFLAGS) $(CXXFLAGS) -DSTUB_EXCEPTIONS $< $(MODELFILE_WASM).o -o $@ $(WASM_LDFLAGS) -D INPUT_FILENAME='"$(CURR_DIR)/banana-bitmap.bmp"'
+
+test_bytes.h: banana-bitmap.bmp
+	echo "unsigned char inputData[] = {" > $@
+	hexdump -ve '1/1 "0x%.2x, "' $< >> $@
+	echo "0x00 };" >> $@
 
 # A successful native build will also require the env var NO_WASM to be set
 # and you might have to clean if you've previously done a wasm build
-native: main.cpp $(MODELFILE).h $(MODELFILE).o $(LIBDIR)/libtensorflow-microlite.a
+native: main.cpp $(MODELFILE).h $(MODELFILE).o $(LIBDIR)/libtensorflow-microlite.a test_bytes.h
 	$(NATIVE_CXX) $(CXXFLAGS) $< $(MODELFILE).o -o $@ $(NATIVE_LDFLAGS)
 
 $(MODELFILE).o: $(MODELFILE).c
