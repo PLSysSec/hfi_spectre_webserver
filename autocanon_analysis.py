@@ -69,6 +69,8 @@ def main(args):
         for s, m in zip(args.statistic, args.metric):
             if s == "latency" and m == "p99":
                 print(' & Tail Lat ', end='\t')
+            elif s == "latency" and (m == "average" or m == "mean"):
+                print(' & Avg Lat ', end='\t')
             elif s == "throughput" and (m == "average" or m == "mean"):
                 print(' & Thruput ', end='\t')
             else:
