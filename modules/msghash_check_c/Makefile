@@ -9,7 +9,7 @@ WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
 build: ../msghash_check_c$(WASM_OUT_SUFFIX).wasm
 
 ./libsodium/Makefile:
-	tax -xf ./libsodium.tar.xz
+	tar -xf ./libsodium.tar.xz
 
 ../msghash_check_c$(WASM_OUT_SUFFIX).wasm: msghash_check.cpp ./libsodium/Makefile
 	cd libsodium && $(MAKE)
