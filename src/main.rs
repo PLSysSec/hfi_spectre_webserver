@@ -18,7 +18,6 @@ use rocket::Request;
 use std::cell::RefCell;
 use std::io;
 use std::io::{Read, Stdin};
-use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::slice;
 
@@ -53,27 +52,15 @@ thread_local! {
     pub static CURRENT_RESULT: RefCell<ModuleResult> = RefCell::new(ModuleResult::None);
 }
 
-extern {
-    fn mpk_no_loop_copy(dest: *mut c_void, src: *const c_void, size: u32);
-}
-
 fn copy_data_out(response_slice: &[u8], use_mpk: bool) -> Vec<u8> {
     if !use_mpk {
         let v = response_slice.to_vec();
         return v;
     } else {
-        let bytes = response_slice.len();
-        let mut tmp: Vec<u8> = Vec::new();
-        tmp.reserve_exact(bytes);
-        let ptr = tmp.as_mut_ptr();
-        std::mem::forget(tmp);
-
-        let v =
-            unsafe {
-                mpk_no_loop_copy(ptr as *mut c_void, response_slice.as_ptr() as *const c_void, bytes as u32);
-                Vec::from_raw_parts(ptr, bytes, bytes)
-            };
-
+        let domain = cranelift_spectre::runtime::get_curr_mpk_domain();
+        cranelift_spectre::runtime::mpk_allow_all_mem();
+        let v = response_slice.to_vec();
+        cranelift_spectre::runtime::set_curr_mpk_domain(domain);
         return v;
     }
 }
