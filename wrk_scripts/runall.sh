@@ -44,4 +44,7 @@ for protection in ${protections[@]}; do
   sleep 3
   $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_ML --timeout $TIMEOUT -s ./tflite.lua "http://localhost:8000" -- $protection
   sleep 3
+
+  # Wait for server to "reset" to some extent
+  sleep 30
 done
