@@ -31,6 +31,9 @@ else
 fi
 
 for protection in ${protections[@]}; do
+  echo "----------------------------"
+  echo "Running tests for $protection"
+  echo "----------------------------"
   $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_HTML --timeout $TIMEOUT -s ./html_template.lua "http://localhost:8000" -- $protection
   sleep 3
   $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_JPEG --timeout $TIMEOUT -s ./jpeg_resize_c.lua "http://localhost:8000" -- $protection
