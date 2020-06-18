@@ -34,9 +34,9 @@ def parse_result_from_file(f):
     return result
 
 def format_num(num, levels_deep=0):
-    if num < 10 and levels_deep != 0:
+    if num < 10:
         return f'{num:.2f}', 0
-    elif num < 100 and levels_deep != 0:
+    elif num < 100:
         return f'{num:.1f}', 0
     elif num < 1000:
         return f'{num:.0f}', 0
