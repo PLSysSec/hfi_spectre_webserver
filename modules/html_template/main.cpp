@@ -10,19 +10,13 @@ int main(int argc, char const *argv[])
     Template mytemplate( R"d(
         This is my {{avalue}} template.  It's {{secondvalue}}...
         Today's weather is {{weather}}.
-
-        {% for j in range(32) %}b[{{j}}] = image[{{j}}];
+        {% for i in range(its) %}a[{{i}}] = image[{{i}}];
         {% endfor %}
-
         abc{% if its %}def{% endif %}ghi
         This is my {{avalue}} template.  It's {{secondvalue}}...
         Today's weather is {{weather}}.
-
-        {% for i in range(3) %}
-        {% for j in range(its) %}b[{{j}}] = image[{{j}}];
+        {% for j in range(32) %}b[{{j}}] = image[{{j}}];
         {% endfor %}
-        {% endfor %}
-
         abc{% if its %}def{% endif %}ghi
     )d" );
     mytemplate.setValue( "avalue", 3 );
