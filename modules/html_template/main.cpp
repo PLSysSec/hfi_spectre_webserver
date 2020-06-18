@@ -18,7 +18,9 @@ int main(int argc, char const *argv[])
         This is my {{avalue}} template.  It's {{secondvalue}}...
         Today's weather is {{weather}}.
 
+        {% for i in range(3) %}
         {% for j in range(its) %}b[{{j}}] = image[{{j}}];
+        {% endfor %}
         {% endfor %}
 
         abc{% if its %}def{% endif %}ghi
