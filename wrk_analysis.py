@@ -107,7 +107,7 @@ def main(args):
                 thruput_suffixes = ['', 'k', 'm']
 
                 if m == "avg_lat_microseconds" or m == "tail_lat_microseconds":
-                    print_padded(f' & {form} {latency_suffixes[dep]}', 15)
+                    print_padded(f' & {form}{latency_suffixes[dep]}', 15)
                 elif m == "throughput":
                     print_padded(f' & {form}{thruput_suffixes[dep]}', 15)
                 else:
