@@ -11,13 +11,13 @@ THREADS=10
 
 # test duration for each test
 DURATION_HTML=60s
-DURATION_JPEG=60s
+DURATION_JPEG=3m
 DURATION_XML=60s
 DURATION_HASH=2m
-DURATION_ML=3m
+DURATION_ML=5m
 
 # timeout for individual requests
-TIMEOUT=30s
+TIMEOUT=60s
 
 mkdir -p results
 
