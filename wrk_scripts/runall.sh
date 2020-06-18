@@ -1,16 +1,7 @@
 #!/bin/bash
 
 # where is wrk?
-WRK=$HOME/wrk/wrk
-
-install_wrk() {
-  pushd
-  cd
-  git clone "https://github.com/wg/wrk"
-  cd wrk
-  make -j8
-  popd
-}
+WRK=../../wrk/wrk
 
 # how many simultaneous connections
 CONNECTIONS=100
