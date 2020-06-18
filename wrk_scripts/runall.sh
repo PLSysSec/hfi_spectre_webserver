@@ -24,7 +24,7 @@ mkdir -p results
 if [ "$1" == "sfi" ]; then
   protections=("stock" "spectre_sfi_aslr" "spectre_sfi_full")
 elif [ "$1" == "cet" ]; then
-  protections=("stock" "spectre_cet_aslr" "spectre_cet_full")
+  protections=("spectre_cet_aslr" "spectre_cet_full")
 else
   echo "Expected argument to be either 'sfi' or 'cet'"
   exit 1
