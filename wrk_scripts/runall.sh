@@ -42,9 +42,14 @@ for protection in ${protections[@]}; do
   sleep 3
   $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_HASH --timeout $TIMEOUT -s ./msghash_check_c.lua "http://localhost:8000" -- $protection
   sleep 3
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_ML --timeout $TIMEOUT -s ./tflite.lua "http://localhost:8000" -- $protection
-  sleep 3
 
   # Wait for server to "reset" to some extent
+  sleep 5
+done
+
+# longer running workload
+for protection in ${protections[@]}; do
+  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_ML --timeout $TIMEOUT -s ./tflite.lua "http://localhost:8000" -- $protection
   sleep 30
 done
+
