@@ -9,8 +9,12 @@ CONNECTIONS=100
 # how many threads to use for requests
 THREADS=10
 
-# test duration
-DURATION=60s
+# test duration for each test
+DURATION_HTML=60s
+DURATION_JPEG=60s
+DURATION_XML=60s
+DURATION_HASH=2m
+DURATION_ML=3m
 
 # timeout for individual requests
 TIMEOUT=30s
@@ -27,14 +31,14 @@ else
 fi
 
 for protection in ${protections[@]}; do
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION --timeout $TIMEOUT -s ./html_template.lua "http://localhost:8000" -- $protection
+  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_HTML --timeout $TIMEOUT -s ./html_template.lua "http://localhost:8000" -- $protection
   sleep 3
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION --timeout $TIMEOUT -s ./jpeg_resize_c.lua "http://localhost:8000" -- $protection
+  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_JPEG --timeout $TIMEOUT -s ./jpeg_resize_c.lua "http://localhost:8000" -- $protection
   sleep 3
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION --timeout $TIMEOUT -s ./xml_to_json.lua "http://localhost:8000" -- $protection
+  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_XML --timeout $TIMEOUT -s ./xml_to_json.lua "http://localhost:8000" -- $protection
   sleep 3
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION --timeout $TIMEOUT -s ./msghash_check_c.lua "http://localhost:8000" -- $protection
+  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_HASH --timeout $TIMEOUT -s ./msghash_check_c.lua "http://localhost:8000" -- $protection
   sleep 3
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION --timeout $TIMEOUT -s ./tflite.lua "http://localhost:8000" -- $protection
+  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_ML --timeout $TIMEOUT -s ./tflite.lua "http://localhost:8000" -- $protection
   sleep 3
 done
