@@ -29,7 +29,7 @@ WARMUP_SLEEP=10
 WARMUP_SLEEP_TFLITE=60
 
 # timeout for individual requests
-TIMEOUT=60m
+TIMEOUT=5m
 
 mkdir -p results
 
