@@ -11,14 +11,21 @@ ARGPARSER.add_argument('-folders',
 ARGPARSER.add_argument('-sofolder',
     required=True,
     help='folder containing .so files corresponding to the results files')
+ARGPARSER.add_argument('-o1',
+    required=True,
+    help='name of output file #1')
+ARGPARSER.add_argument('-o2',
+    required=True,
+    help='name of output file #2')
 
 configurations = ["stock", "spectre_sfi_aslr", "spectre_sfi_full", "spectre_cet_aslr", "spectre_cet_full"]
 num_configurations = len(configurations)
 metrics = ["avg_lat_microseconds", "tail_lat_microseconds", "throughput", "bin_size"]
 num_metrics = len(metrics)
 
-# If workloads with these names are found, they go in a separate table below the main table
-workloads_to_go_in_bottom_table = ["jpeg_resize_c", "tflite"]
+# Workloads with these names go in output file #2
+# If this is empty, only one output file is created
+workloads_to_go_in_output_file_2 = ["tflite"]
 
 # given a config name, return the string to put in the LaTeX for it
 def latex_name_of_config(config):
@@ -115,10 +122,10 @@ def format_num_fewer_digits(num, levels_deep=0):
         res, dep = format_num_fewer_digits(num/1000, levels_deep+1)
         return res, int(dep) + 1
 
-def print_padded(msg, padded_len):
-    print(msg.ljust(padded_len), end='')
+def write_padded(ofile, msg, padded_len):
+    ofile.write(msg.ljust(padded_len))
 
-def print_table(results, workloads):
+def write_table(ofile, results, workloads):
     num_workloads = len(workloads)
     if num_configurations == 0:
         raise ValueError("no configurations")
@@ -129,31 +136,31 @@ def print_table(results, workloads):
 
     # print table header
     cell_size = '0.55cm'
-    print('\\footnotesize')
-    print('\\begin{tabular}{p{2.2cm}')
+    ofile.write('\\footnotesize\n')
+    ofile.write('\\begin{tabular}{p{2.2cm}\n')
     for _ in range(num_workloads):
-        print('  |', end='')
+        ofile.write('  |')
         for _ in range(num_metrics):
-            print('p{' + cell_size + '}', end='')
-        print('')
-    print('}\n')
+            ofile.write('p{' + cell_size + '}')
+        ofile.write('\n')
+    ofile.write('}\n\n')
 
     # print workloads
-    print('\\multirow{2}{1cm}{Protection} ')
+    ofile.write('\\multirow{2}{1cm}{Protection}\n')
     for w in workloads:
-        print(' & \\multicolumn{' + str(num_metrics) + '}{c|}{' + latex_name_of_workload(w) + '}')
-    print('\\\\\\cline{2-'+ str(num_workloads * num_metrics + 1) + '}\n')
+        ofile.write(' & \\multicolumn{' + str(num_metrics) + '}{c|}{' + latex_name_of_workload(w) + '}\n')
+    ofile.write('\\\\\\cline{2-'+ str(num_workloads * num_metrics + 1) + '}\n\n')
 
     # print metric headers
     for w in workloads:
         for m in metrics:
-            print(' & ' + latex_name_of_metric(m), end='\t')
-        print('')
-    print('\\\\\\hline\n')
+            ofile.write(' & ' + latex_name_of_metric(m) + '\t')
+        ofile.write('\n')
+    ofile.write('\\\\\\hline\n\n')
 
     # print data
     for r in configurations:
-        print(latex_name_of_config(r))
+        ofile.write(latex_name_of_config(r) + '\n')
         for w in workloads:
             for m in metrics:
                 lres = float(results[r][w][m])
@@ -163,18 +170,18 @@ def print_table(results, workloads):
                 binsize_suffixes = ['B', 'KB', 'MB', 'GB']
 
                 if m == "avg_lat_microseconds" or m == "tail_lat_microseconds":
-                    print_padded(f' & {form}{latency_suffixes[dep]}', 15)
+                    write_padded(ofile, f' & {form}{latency_suffixes[dep]}', 15)
                 elif m == "throughput":
-                    print_padded(f' & {form}{thruput_suffixes[dep]}', 15)
+                    write_padded(ofile, f' & {form}{thruput_suffixes[dep]}', 15)
                 elif m == "bin_size":
-                    print_padded(f' & {form}{binsize_suffixes[dep]}', 15)
+                    write_padded(ofile, f' & {form}{binsize_suffixes[dep]}', 15)
                 else:
                     raise ValueError("unknown unit for metric " + m)
-            print('')
-        print('\\\\\\hline\n')
+            ofile.write('\n')
+        ofile.write('\\\\\\hline\n\n')
 
     # print footer
-    print('\\end{tabular}')
+    ofile.write('\\end{tabular}\n')
 
 def main(args):
     args = ARGPARSER.parse_args()
@@ -183,12 +190,13 @@ def main(args):
 
     workloads = [w for w in results[configurations[0]]]
 
-    bottom_workloads = [w for w in workloads if w in workloads_to_go_in_bottom_table]
-    top_workloads = [w for w in workloads if w not in workloads_to_go_in_bottom_table]
+    workloads_for_file_2 = [w for w in workloads if w in workloads_to_go_in_output_file_2]
+    workloads_for_file_1 = [w for w in workloads if w not in workloads_to_go_in_output_file_2]
 
-    print_table(results, top_workloads)
-    if len(bottom_workloads) > 0:
-        print('\n\\vspace{1em}\n')
-        print_table(results, bottom_workloads)
+    with open(args.o1, 'w') as ofile:
+        write_table(ofile, results, workloads_for_file_1)
+    if len(workloads_for_file_2) > 0:
+        with open(args.o2, 'w') as ofile:
+            write_table(ofile, results, workloads_for_file_2)
 
 sys.exit(main(sys.argv))
