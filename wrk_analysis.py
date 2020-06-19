@@ -106,6 +106,15 @@ def format_num(num, levels_deep=0):
         res, dep = format_num(num/1000, levels_deep+1)
         return res, int(dep) + 1
 
+def format_num_fewer_digits(num, levels_deep=0):
+    if num < 100:
+        return f'{num:.1f}', 0
+    elif num < 1000:
+        return f'{num:.0f}', 0
+    else:
+        res, dep = format_num_fewer_digits(num/1000, levels_deep+1)
+        return res, int(dep) + 1
+
 def print_padded(msg, padded_len):
     print(msg.ljust(padded_len), end='')
 
@@ -121,13 +130,13 @@ def print_table(results, workloads):
     # print table header
     cell_size = '0.55cm'
     print('\\footnotesize')
-    print('\\begin{tabular}{p{2.2cm}}')
+    print('\\begin{tabular}{p{2.2cm}')
     for _ in range(num_workloads):
         print('  |', end='')
         for _ in range(num_metrics):
             print('p{' + cell_size + '}', end='')
         print('')
-    print('')
+    print('}\n')
 
     # print workloads
     print('\\multirow{2}{1cm}{Protection} ')
@@ -148,7 +157,7 @@ def print_table(results, workloads):
         for w in workloads:
             for m in metrics:
                 lres = float(results[r][w][m])
-                form, dep = format_num(lres)
+                form, dep = format_num(lres) if m != "bin_size" else format_num_fewer_digits(lres)
                 latency_suffixes = ['us', 'ms', 's']
                 thruput_suffixes = ['', 'k', 'm']
                 binsize_suffixes = ['B', 'KB', 'MB', 'GB']
