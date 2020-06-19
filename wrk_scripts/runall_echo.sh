@@ -27,7 +27,7 @@ TIMEOUT=60s
 mkdir -p results
 
 # run these with the SFI server
-sfi_protections=("stock" "spectre_sfi_aslr" "spectre_sfi_full")
+sfi_protections=("spectre_sfi_aslr" "spectre_sfi_full")
 # run these with the CET server
 cet_protections=("spectre_cet_aslr" "spectre_cet_full")
 
@@ -91,9 +91,6 @@ run_tests() {
 
   for protection in ${sfi_protections[@]}; do
     run_test sfi $protection $lua $duration
-  done
-  for protection in ${cet_protections[@]}; do
-    run_test cet $protection $lua $duration
   done
 
   echo
