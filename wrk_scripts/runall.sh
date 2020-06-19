@@ -118,7 +118,7 @@ run_tests() {
   echo
 }
 
-run_tests echo_server     $DURATION_ECHO
+# run_tests echo_server     $DURATION_ECHO
 run_tests html_template   $DURATION_HTML
 run_tests jpeg_resize_c   $DURATION_JPEG
 run_tests xml_to_json     $DURATION_XML
