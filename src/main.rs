@@ -254,7 +254,42 @@ fn html_template(protection: &RawStr) -> Result<String, Error> {
         let r = match &*current_result.borrow() {
             ModuleResult::String(s) => s.clone(),
             _ => {
-                panic!("Unexpected response from jpeg module");
+                panic!("Unexpected response from module");
+            }
+        };
+        *current_result.borrow_mut() = ModuleResult::None;
+        return r;
+    });
+    Ok(ret)
+}
+
+#[get("/echo_server?<msg>&<protection>")]
+fn echo_server(msg: &RawStr, protection: &RawStr) -> Result<String, Error> {
+    let protection = protection.to_string();
+    let aslr = protection.contains("_aslr");
+    let input: Vec<String> = vec!["".to_string(), msg.to_string()];
+    let instance = wasm_module::create_wasm_instance(
+        "echo_server".to_string(),
+        protection,
+        input,
+        aslr,
+        MODULE_PATH.clone(),
+        false,
+    );
+    CURRENT_RESULT.with(|current_result| {
+        *current_result.borrow_mut() = ModuleResult::None;
+    });
+
+    let result = instance?.run(lucet_wasi::START_SYMBOL, &[])?;
+    if !result.is_returned() {
+        panic!("wasm module yielded?");
+    }
+
+    let ret = CURRENT_RESULT.with(|current_result| {
+        let r = match &*current_result.borrow() {
+            ModuleResult::String(s) => s.clone(),
+            _ => {
+                panic!("Unexpected response from module");
             }
         };
         *current_result.borrow_mut() = ModuleResult::None;
@@ -289,7 +324,7 @@ fn tflite(protection: &RawStr) -> Result<String, Error> {
         let r = match &*current_result.borrow() {
             ModuleResult::String(s) => s.clone(),
             _ => {
-                panic!("Unexpected response from tflite module");
+                panic!("Unexpected response from module");
             }
         };
         *current_result.borrow_mut() = ModuleResult::None;
@@ -366,6 +401,7 @@ fn main() {
                 stream,
                 jpeg_resize_c,
                 msghash_check_c,
+                echo_server,
                 fib_c,
                 html_template,
                 tflite,

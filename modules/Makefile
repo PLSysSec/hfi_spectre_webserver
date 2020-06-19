@@ -16,7 +16,7 @@ else
 endif
 
 .PHONY: modules
-modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all xml_to_json_all tflite_all
+modules: jpeg_resize_c_all msghash_check_c_all fib_c_all html_template_all xml_to_json_all tflite_all echo_server_all
 
 WASM_CFLAGS=-O3 -Wl,--allow-undefined -Wl,--export-all -fno-exceptions
 WASM_CFLAGS_UNROLL_LOOPS=-funroll-loops -mllvm --unroll-runtime -mllvm --unroll-runtime-epilog
