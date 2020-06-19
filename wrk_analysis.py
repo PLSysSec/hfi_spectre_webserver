@@ -69,6 +69,8 @@ def main(args):
             w = "\\cdnJpgQuality"
         elif w == "tflite":
             w = "\\cdnML"
+        elif w == "echo_server":
+            w = "\\Echo Server"
         print(' & \\multicolumn{' + str(num_metrics) + '}{c|}{' + w.replace('_', '\_') + '}')
     print('\\\\\\cline{2-'+ str(num_workloads * num_metrics + 1) + '}\n')
     # print metric statistics

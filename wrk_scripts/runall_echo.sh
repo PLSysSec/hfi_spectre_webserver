@@ -103,8 +103,4 @@ run_tests() {
   echo
 }
 
-run_tests html_template   $DURATION_HTML
-run_tests jpeg_resize_c   $DURATION_JPEG
-run_tests xml_to_json     $DURATION_XML
-run_tests msghash_check_c $DURATION_HASH
-run_tests tflite          $DURATION_ML
+run_tests echo_server     $DURATION_ECHO
