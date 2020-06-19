@@ -47,69 +47,63 @@ launch_server() {
   sleep 3
 }
 
-run_tests() {
-  protection=$2
-
-  echo "----------------------------"
-  echo "Running tests for $protection"
-  echo "----------------------------"
-
-  echo
-  echo "html_template"
-  echo
-  launch_server $1
-  $TESTFIB $protection
-  sleep 1
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_HTML --timeout $TIMEOUT -s ./html_template.lua "http://localhost:8000" -- $protection
-  kill $server_pid
-  wait $server_pid
-
-  echo
-  echo "jpeg_resize_c"
-  echo
-  launch_server $1
-  $TESTFIB $protection
-  sleep 1
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_JPEG --timeout $TIMEOUT -s ./jpeg_resize_c.lua "http://localhost:8000" -- $protection
-  kill $server_pid
-  wait $server_pid
-
-  echo
-  echo "xml_to_json"
-  echo
-  launch_server $1
-  $TESTFIB $protection
-  sleep 1
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_XML --timeout $TIMEOUT -s ./xml_to_json.lua "http://localhost:8000" -- $protection
-  kill $server_pid
-  wait $server_pid
-
-  echo
-  echo "msghash_check_c"
-  echo
-  launch_server $1
-  $TESTFIB $protection
-  sleep 1
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_HASH --timeout $TIMEOUT -s ./msghash_check_c.lua "http://localhost:8000" -- $protection
-  kill $server_pid
-  wait $server_pid
-
-  echo
-  echo "tflite"
-  echo
-  launch_server $1
-  $TESTFIB $protection
-  sleep 1
-  $WRK -c $CONNECTIONS -t $THREADS -d $DURATION_ML --timeout $TIMEOUT -s ./tflite.lua "http://localhost:8000" -- $protection
-  kill $server_pid
-  wait $server_pid
+run_wrk() {
+  protection=$1
+  lua=$2
+  duration=$3
+  $WRK -c $CONNECTIONS -t $THREADS -d $duration --timeout $TIMEOUT -s $lua "http://localhost:8000" -- $protection
 }
 
-for protection in ${sfi_protections[@]}; do
-  run_tests sfi $protection
-done
+run_test() {
+  sfi_or_cet=$1
+  protection=$2
+  lua=$3
+  duration=$4
 
-for protection in ${cet_protections[@]}; do
-  run_tests cet $protection
-done
+  echo
+  echo $protection :
+  echo
 
+  launch_server $sfi_or_cet
+  $TESTFIB $protection
+  sleep 1
+  run_wrk $protection $lua $duration
+
+  echo
+  echo "Killing server..."
+  kill $server_pid
+  wait $server_pid
+  echo "Killed server"
+}
+
+run_tests() {
+  workload=$1
+  duration=$2
+
+  lua=./$workload.lua
+
+  echo
+  echo "----------------------------"
+  echo "Running tests for $workload"
+  echo "----------------------------"
+  echo
+
+  for protection in ${sfi_protections[@]}; do
+    run_test sfi $protection $lua $duration
+  done
+  for protection in ${cet_protections[@]}; do
+    run_test cet $protection $lua $duration
+  done
+
+  echo
+  echo "----------------------------"
+  echo "Done with tests for $workload"
+  echo "----------------------------"
+  echo
+}
+
+run_tests html_template   $DURATION_HTML
+run_tests jpeg_resize_c   $DURATION_JPEG
+run_tests xml_to_json     $DURATION_XML
+run_tests msghash_check_c $DURATION_HASH
+run_tests tflite          $DURATION_ML
