@@ -19,10 +19,10 @@ DURATION_HTML=60s
 DURATION_JPEG=3m
 DURATION_XML=60s
 DURATION_HASH=2m
-DURATION_ML=5m
+DURATION_ML=15m
 
 # timeout for individual requests
-TIMEOUT=60s
+TIMEOUT=60m
 
 mkdir -p results
 
