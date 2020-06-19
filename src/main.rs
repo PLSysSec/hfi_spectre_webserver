@@ -384,10 +384,6 @@ lazy_static! {
     };
 }
 
-extern "C" {
-    fn aslr_library_preload();
-}
-
 fn main() {
     ensure_linked();
 
@@ -395,10 +391,6 @@ fn main() {
     println!("module directory: {:?}", module_path);
 
     service_directory::load_dir(module_path).unwrap();
-
-    unsafe {
-        aslr_library_preload();
-    }
 
     rocket::ignite()
         .mount(
