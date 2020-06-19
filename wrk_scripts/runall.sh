@@ -25,6 +25,8 @@ DURATION_ML=15m
 WARMUP_DURATION=10s
 # How long to wait between warmup and the real run (to let server get ready) (in seconds)
 WARMUP_SLEEP=10
+# special warmup_sleep for tflite
+WARMUP_SLEEP_TFLITE=60
 
 # timeout for individual requests
 TIMEOUT=60m
@@ -77,6 +79,9 @@ run_test() {
   # warmup
   run_wrk $protection $lua $WARMUP_DURATION  # these results will get overwritten
   sleep $WARMUP_SLEEP
+  if [ "$lua" == "./tflite.lua" ]; then
+    sleep $WARMUP_SLEEP_TFLITE
+  fi
 
   run_wrk $protection $lua $duration
 
