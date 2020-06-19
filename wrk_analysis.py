@@ -89,13 +89,13 @@ def main(args):
         if r == "stock":
             print("Stock --- unsafe")
         elif r == "spectre_sfi_aslr":
-            print("\\sysDesignOne with ASLR")
+            print("\\sysDesignOne ASLR")
         elif r == "spectre_sfi_full":
-            print("\\sysDesignOne deterministic (CBP-to-BTB)")
+            print("\\sysDesignOne Det")
         elif r == "spectre_cet_aslr":
-            print("\\sysDesignTwo with ASLR")
+            print("\\sysDesignTwo ASLR")
         elif r == "spectre_cet_full":
-            print("\\sysDesignTwo deterministic (Interlock)")
+            print("\\sysDesignTwo Det")
         else:
             print(f'{r} '.replace('_', '\_'))
 
