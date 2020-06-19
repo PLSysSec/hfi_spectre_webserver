@@ -21,6 +21,11 @@ DURATION_XML=60s
 DURATION_HASH=2m
 DURATION_ML=15m
 
+# How long to run wrk for as warmup
+WARMUP_DURATION=10s
+# How long to wait between warmup and the real run (to let server get ready) (in seconds)
+WARMUP_SLEEP=10
+
 # timeout for individual requests
 TIMEOUT=60m
 
@@ -68,6 +73,11 @@ run_test() {
   launch_server $sfi_or_cet
   $TESTFIB $protection
   sleep 1
+
+  # warmup
+  run_wrk $protection $lua $WARMUP_DURATION  # these results will get overwritten
+  sleep $WARMUP_SLEEP
+
   run_wrk $protection $lua $duration
 
   echo
