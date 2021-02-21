@@ -127,4 +127,4 @@ run_tests html_template   $DURATION_HTML $CONNECTIONS
 run_tests jpeg_resize_c   $DURATION_JPEG $CONNECTIONS
 run_tests xml_to_json     $DURATION_XML  $CONNECTIONS
 run_tests msghash_check_c $DURATION_HASH $CONNECTIONS
-run_tests tflite          $DURATION_ML   $ML_CONNECTIONS
+# run_tests tflite          $DURATION_ML   $ML_CONNECTIONS

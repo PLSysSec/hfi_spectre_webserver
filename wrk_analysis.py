@@ -146,9 +146,12 @@ def write_table(ofile, results, workloads):
     ofile.write('}\n\n')
 
     # print workloads
-    ofile.write('\\multirow{2}{1cm}{Protection}\n')
-    for w in workloads:
-        ofile.write(' & \\multicolumn{' + str(num_metrics) + '}{c|}{' + latex_name_of_workload(w) + '}\n')
+    ofile.write('\\multirow{2}{1cm}{\\textbf{\\pbox{\\textwidth}{\\sys Protection}}}\n')
+    for i, w in enumerate(workloads):
+        usebar = '|'
+        if i == (len(workloads) - 1):
+            usebar = ''
+        ofile.write(' & \\multicolumn{' + str(num_metrics) + '}{c' + usebar + '}{' + latex_name_of_workload(w) + '}\n')
     ofile.write('\\\\\\cline{2-'+ str(num_workloads * num_metrics + 1) + '}\n\n')
 
     # print metric headers
