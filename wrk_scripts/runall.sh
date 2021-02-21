@@ -122,7 +122,7 @@ run_tests() {
   echo
 }
 
-run_tests echo_server     $DURATION_ECHO $CONNECTIONS
+# run_tests echo_server     $DURATION_ECHO $CONNECTIONS
 run_tests html_template   $DURATION_HTML $CONNECTIONS
 run_tests jpeg_resize_c   $DURATION_JPEG $CONNECTIONS
 run_tests xml_to_json     $DURATION_XML  $CONNECTIONS
