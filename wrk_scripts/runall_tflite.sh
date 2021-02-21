@@ -8,7 +8,8 @@ CET_SERVER=$SPECTRESFI_WEBSERVER/target-cet/release/spectresfi_webserver
 TESTFIB=$SPECTRESFI_WEBSERVER/spectre_testfib.sh
 
 # how many simultaneous connections
-CONNECTIONS=20
+CONNECTIONS=100
+ML_CONNECTIONS=20
 
 # how many threads to use for requests
 THREADS=10
@@ -19,14 +20,12 @@ DURATION_HTML=60s
 DURATION_JPEG=3m
 DURATION_XML=60s
 DURATION_HASH=2m
-DURATION_ML=15m
+DURATION_ML=10m
 
 # How long to run wrk for as warmup
 WARMUP_DURATION=10s
 # How long to wait between warmup and the real run (to let server get ready) (in seconds)
 WARMUP_SLEEP=10
-# special warmup_sleep for tflite
-WARMUP_SLEEP_TFLITE=60
 
 # timeout for individual requests
 TIMEOUT=10m
@@ -87,11 +86,10 @@ run_test() {
   sleep 1
 
   # warmup
-  # run_wrk $protection $lua $WARMUP_DURATION $conns # these results will get overwritten
-  # sleep $WARMUP_SLEEP
-  # if [ "$lua" == "./tflite.lua" ]; then
-  #   sleep $WARMUP_SLEEP_TFLITE
-  # fi
+  if [[ "$lua" != "./tflite.lua" ]]; then
+    run_wrk $protection $lua $WARMUP_DURATION $conns # these results will get overwritten
+    sleep $WARMUP_SLEEP
+  fi
 
   run_wrk $protection $lua $duration $conns
 
@@ -134,4 +132,4 @@ run_tests() {
 # run_tests jpeg_resize_c   $DURATION_JPEG $CONNECTIONS
 # run_tests xml_to_json     $DURATION_XML  $CONNECTIONS
 # run_tests msghash_check_c $DURATION_HASH $CONNECTIONS
-run_tests tflite          $DURATION_ML $CONNECTIONS
+run_tests tflite          $DURATION_ML   $ML_CONNECTIONS
