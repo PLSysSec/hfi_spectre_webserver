@@ -47,6 +47,7 @@ launch_server() {
   if [ "$1" == "sfi" ]; then
     $SFI_SERVER &
   elif [ "$1" == "cet" ]; then
+    echo "!!!!!!!!Ignore module load failures below!!!!!!!!"
     $CET_SERVER &
   else
     echo "launch_server expected either parameter 'sfi' or 'cet'"

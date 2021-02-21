@@ -46,6 +46,7 @@ launch_server() {
   if [ "$1" == "sfi" ]; then
     $SFI_SERVER &
   elif [ "$1" == "cet" ]; then
+    echo "!!!!!!!!Ignore module load failures below!!!!!!!!"
     $CET_SERVER &
   else
     echo "launch_server expected either parameter 'sfi' or 'cet'"
@@ -59,7 +60,8 @@ run_wrk() {
   protection=$1
   lua=$2
   duration=$3
-  $WRK -c $CONNECTIONS -t $THREADS -d $duration --timeout $TIMEOUT -s $lua "http://localhost:8000" -- $protection
+  conns=$4
+  $WRK -c $conns -t $THREADS -d $duration --timeout $TIMEOUT -s $lua "http://localhost:8000" -- $protection
 }
 
 run_test() {
@@ -67,6 +69,14 @@ run_test() {
   protection=$2
   lua=$3
   duration=$4
+  conns=$5
+  workload=$6
+
+  echo
+  echo "----------------------------"
+  echo "Running tests for $workload: $protection"
+  echo "----------------------------"
+  echo
 
   echo
   echo $protection :
@@ -77,13 +87,13 @@ run_test() {
   sleep 1
 
   # warmup
-  # run_wrk $protection $lua $WARMUP_DURATION  # these results will get overwritten
+  # run_wrk $protection $lua $WARMUP_DURATION $conns # these results will get overwritten
   # sleep $WARMUP_SLEEP
   # if [ "$lua" == "./tflite.lua" ]; then
   #   sleep $WARMUP_SLEEP_TFLITE
   # fi
 
-  run_wrk $protection $lua $duration
+  run_wrk $protection $lua $duration $conns
 
   echo
   echo "Killing server..."
@@ -95,6 +105,7 @@ run_test() {
 run_tests() {
   workload=$1
   duration=$2
+  conns=$3
 
   lua=./$workload.lua
 
@@ -105,10 +116,10 @@ run_tests() {
   echo
 
   for protection in ${sfi_protections[@]}; do
-    run_test sfi $protection $lua $duration
+    run_test sfi $protection $lua $duration $conns $workload
   done
   for protection in ${cet_protections[@]}; do
-    run_test cet $protection $lua $duration
+    run_test cet $protection $lua $duration $conns $workload
   done
 
   echo
@@ -118,9 +129,9 @@ run_tests() {
   echo
 }
 
-# run_tests echo_server     $DURATION_ECHO
-# run_tests html_template   $DURATION_HTML
-# run_tests jpeg_resize_c   $DURATION_JPEG
-# run_tests xml_to_json     $DURATION_XML
-# run_tests msghash_check_c $DURATION_HASH
-run_tests tflite          $DURATION_ML
+# run_tests echo_server     $DURATION_ECHO $CONNECTIONS
+# run_tests html_template   $DURATION_HTML $CONNECTIONS
+# run_tests jpeg_resize_c   $DURATION_JPEG $CONNECTIONS
+# run_tests xml_to_json     $DURATION_XML  $CONNECTIONS
+# run_tests msghash_check_c $DURATION_HASH $CONNECTIONS
+run_tests tflite          $DURATION_ML $CONNECTIONS
