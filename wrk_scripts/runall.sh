@@ -80,7 +80,7 @@ run_test() {
   sleep 1
 
   # warmup
-  run_wrk $protection $lua $WARMUP_DURATION  # these results will get overwritten
+  run_wrk $protection $lua $WARMUP_DURATION $conns # these results will get overwritten
   sleep $WARMUP_SLEEP
   if [ "$lua" == "./tflite.lua" ]; then
     sleep $WARMUP_SLEEP_TFLITE
