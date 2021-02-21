@@ -70,6 +70,13 @@ run_test() {
   lua=$3
   duration=$4
   conns=$5
+  workload=$6
+
+  echo
+  echo "----------------------------"
+  echo "Running tests for $workload: $protection"
+  echo "----------------------------"
+  echo
 
   echo
   echo $protection :
@@ -109,10 +116,10 @@ run_tests() {
   echo
 
   for protection in ${sfi_protections[@]}; do
-    run_test sfi $protection $lua $duration $conns
+    run_test sfi $protection $lua $duration $conns $workload
   done
   for protection in ${cet_protections[@]}; do
-    run_test cet $protection $lua $duration $conns
+    run_test cet $protection $lua $duration $conns $workload
   done
 
   echo
