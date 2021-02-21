@@ -9,6 +9,7 @@ TESTFIB=$SPECTRESFI_WEBSERVER/spectre_testfib.sh
 
 # how many simultaneous connections
 CONNECTIONS=100
+ML_CONNECTIONS=20
 
 # how many threads to use for requests
 THREADS=10
@@ -29,7 +30,7 @@ WARMUP_SLEEP=10
 WARMUP_SLEEP_TFLITE=60
 
 # timeout for individual requests
-TIMEOUT=5m
+TIMEOUT=10m
 
 mkdir -p results
 
@@ -59,7 +60,8 @@ run_wrk() {
   protection=$1
   lua=$2
   duration=$3
-  $WRK -c $CONNECTIONS -t $THREADS -d $duration --timeout $TIMEOUT -s $lua "http://localhost:8000" -- $protection
+  conns=$4
+  $WRK -c $conns -t $THREADS -d $duration --timeout $TIMEOUT -s $lua "http://localhost:8000" -- $protection
 }
 
 run_test() {
@@ -67,6 +69,7 @@ run_test() {
   protection=$2
   lua=$3
   duration=$4
+  conns=$5
 
   echo
   echo $protection :
@@ -83,7 +86,7 @@ run_test() {
     sleep $WARMUP_SLEEP_TFLITE
   fi
 
-  run_wrk $protection $lua $duration
+  run_wrk $protection $lua $duration $conns
 
   echo
   echo "Killing server..."
@@ -95,6 +98,7 @@ run_test() {
 run_tests() {
   workload=$1
   duration=$2
+  conns=$3
 
   lua=./$workload.lua
 
@@ -105,10 +109,10 @@ run_tests() {
   echo
 
   for protection in ${sfi_protections[@]}; do
-    run_test sfi $protection $lua $duration
+    run_test sfi $protection $lua $duration $conns
   done
   for protection in ${cet_protections[@]}; do
-    run_test cet $protection $lua $duration
+    run_test cet $protection $lua $duration $conns
   done
 
   echo
@@ -118,9 +122,9 @@ run_tests() {
   echo
 }
 
-# run_tests echo_server     $DURATION_ECHO
-run_tests html_template   $DURATION_HTML
-run_tests jpeg_resize_c   $DURATION_JPEG
-run_tests xml_to_json     $DURATION_XML
-run_tests msghash_check_c $DURATION_HASH
-run_tests tflite          $DURATION_ML
+run_tests echo_server     $DURATION_ECHO $CONNECTIONS
+run_tests html_template   $DURATION_HTML $CONNECTIONS
+run_tests jpeg_resize_c   $DURATION_JPEG $CONNECTIONS
+run_tests xml_to_json     $DURATION_XML  $CONNECTIONS
+run_tests msghash_check_c $DURATION_HASH $CONNECTIONS
+run_tests tflite          $DURATION_ML   $ML_CONNECTIONS
