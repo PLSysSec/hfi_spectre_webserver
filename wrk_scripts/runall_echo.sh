@@ -133,3 +133,5 @@ run_tests echo_server     $DURATION_ECHO $CONNECTIONS
 # run_tests xml_to_json     $DURATION_XML  $CONNECTIONS
 # run_tests msghash_check_c $DURATION_HASH $CONNECTIONS
 # run_tests tflite          $DURATION_ML   $ML_CONNECTIONS
+
+exit 0
