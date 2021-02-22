@@ -4,6 +4,12 @@ import os
 import argparse
 import math
 
+import numpy as np
+
+def geo_mean_overflow(iterable):
+    a = np.log(iterable)
+    return np.exp(a.mean())
+
 ARGPARSER = argparse.ArgumentParser()
 ARGPARSER.add_argument('-folders',
     nargs="+",
@@ -17,6 +23,18 @@ ARGPARSER.add_argument('-o1',
 ARGPARSER.add_argument('-o2',
     required=True,
     help='name of output file #2')
+ARGPARSER.add_argument('-o3',
+    required=True,
+    help='name of output metrics file')
+
+def geomean(lst):
+    # Geomean is conceptually:
+    #   product of all terms in the list, take nth root
+    # This can overflow, so it is better to compute it as:
+    #   log all terms in the list, arithmetic mean, un-log
+    # which is equivalent
+    lst = np.array(lst)
+    return np.exp(np.mean(np.log(1.0*lst)))  # 1.0* and np.log implicitly lift to lists elementwise
 
 configurations = ["stock", "spectre_sfi_aslr", "spectre_sfi_full", "spectre_cet_aslr", "spectre_cet_full"]
 num_configurations = len(configurations)
@@ -186,6 +204,23 @@ def write_table(ofile, results, workloads):
     # print footer
     ofile.write('\\end{tabular}\n')
 
+def compute_metrics(ofile, results, workloads):
+    ofile.write('Throughput overhead (geomean)\n')
+    rem_configs = [c for c in configurations if c != "stock"]
+    for c in rem_configs:
+        overheads = []
+        for w in workloads:
+            try:
+                baseline = results["stock"][w]["throughput"]
+                scheme = results[c][w]["throughput"]
+                overhead = scheme / baseline
+                overheads += [overhead]
+            except:
+                pass
+        geomean_ratio = geomean(overheads)
+        geomean_percent = (1 - geomean_ratio) * 100
+        ofile.write(c + ': ' + str(geomean_percent) + '\n')
+
 def main(args):
     args = ARGPARSER.parse_args()
 
@@ -193,11 +228,15 @@ def main(args):
 
     workloads = [w for w in results[configurations[0]]]
 
+    with open(args.o3, 'w') as ofile:
+        compute_metrics(ofile, results, workloads)
+
     workloads_for_file_2 = [w for w in workloads if w in workloads_to_go_in_output_file_2]
     workloads_for_file_1 = [w for w in workloads if w not in workloads_to_go_in_output_file_2]
 
-    with open(args.o1, 'w') as ofile:
-        write_table(ofile, results, workloads_for_file_1)
+    if len(workloads_for_file_1) > 0:
+        with open(args.o1, 'w') as ofile:
+            write_table(ofile, results, workloads_for_file_1)
     if len(workloads_for_file_2) > 0:
         with open(args.o2, 'w') as ofile:
             write_table(ofile, results, workloads_for_file_2)

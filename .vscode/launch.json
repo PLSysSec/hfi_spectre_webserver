@@ -30,13 +30,15 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/target/debug/spectresfi_webserver",
-            "args": [  ],
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [{
-                "name": "RUST_BACKTRACE",
-                "value": "1"
-            }],
+            "environment": [
+                {
+                    "name": "RUST_BACKTRACE",
+                    "value": "1"
+                }
+            ],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
@@ -57,6 +59,25 @@
             "env": {
                 "RUST_BACKTRACE": "1"
             }
+        },
+        {
+            "name": "wrk_analysis",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/wrk_analysis.py",
+            "args": [
+                "-folders",
+                "${workspaceFolder}/../benchmarks/macro_2021-02-21T15:11:39-08:00",
+                "-sofolder",
+                "${workspaceFolder}/modules",
+                "-o1",
+                "${workspaceFolder}/../benchmarks/macro_2021-02-21T15:11:39-08:00/wrk_table_1.tex",
+                "-o2",
+                "${workspaceFolder}/../benchmarks/macro_2021-02-21T15:11:39-08:00/wrk_table_2.tex",
+                "-o3",
+                "${workspaceFolder}/../benchmarks/macro_2021-02-21T15:11:39-08:00/metrics.txt",
+            ],
+            "console": "integratedTerminal"
         }
     ]
 }
