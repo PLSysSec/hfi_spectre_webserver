@@ -1,3 +1,5 @@
+.NOTPARALLEL:
+
 CURR_DIR=$(shell realpath .)
 NATIVE_CC=gcc
 NATIVE_CXX=g++
