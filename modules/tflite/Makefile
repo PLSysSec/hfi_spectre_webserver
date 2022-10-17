@@ -3,11 +3,11 @@
 CURR_DIR=$(shell realpath .)
 NATIVE_CC=gcc
 NATIVE_CXX=g++
-WASM_CC=/opt/wasi-sdk/bin/clang
-WASM_CXX=/opt/wasi-sdk/bin/clang++
-WASM_AR=/opt/wasi-sdk/bin/llvm-ar
-WASM_RANLIB=/opt/wasi-sdk/bin/ranlib
-WASM_LD=/opt/wasi-sdk/bin/wasm-ld
+WASM_CC=$(shell realpath .)/../../../wasi-sdk/bin/clang
+WASM_CXX=$(shell realpath .)/../../../wasi-sdk/bin/clang++
+WASM_AR=$(shell realpath .)/../../../wasi-sdk/bin/llvm-ar
+WASM_RANLIB=$(shell realpath .)/../../../wasi-sdk/bin/ranlib
+WASM_LD=$(shell realpath .)/../../../wasi-sdk/bin/wasm-ld
 
 TENSORFLOW_MICRO_DIR=./tensorflow/tensorflow/lite/micro
 TENSORFLOW_DOWNLOADS_DIR=$(TENSORFLOW_MICRO_DIR)/tools/make/downloads

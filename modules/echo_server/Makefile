@@ -1,6 +1,5 @@
 
-CURR_DIR=$(shell realpath .)
-WASM_CLANG=/opt/wasi-sdk/bin/clang
+WASM_CLANG=$(shell realpath .)/../../../wasi-sdk/bin/clang
 
 build: $(CURR_DIR)/../echo_server$(WASM_OUT_SUFFIX).wasm
 
