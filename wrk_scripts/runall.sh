@@ -2,7 +2,7 @@
 
 # where are various executables?
 WRK=../../wrk/wrk
-SPECTRESFI_WEBSERVER=../../spectresfi_webserver
+SPECTRESFI_WEBSERVER=../../hfi_spectre_webserver
 SFI_SERVER=$SPECTRESFI_WEBSERVER/target/release/spectresfi_webserver
 CET_SERVER=$SPECTRESFI_WEBSERVER/target-cet/release/spectresfi_webserver
 TESTFIB=$SPECTRESFI_WEBSERVER/spectre_testfib.sh
@@ -33,9 +33,9 @@ TIMEOUT=10m
 mkdir -p results
 
 # run these with the SFI server
-sfi_protections=("stock" "spectre_sfi_aslr" "spectre_sfi_full")
+sfi_protections=("stock" "spectre_sfi_breakout" "spectre_hfi_breakout")
 # run these with the CET server
-cet_protections=("spectre_cet_aslr" "spectre_cet_full")
+cet_protections=()
 
 # This ensures that if this script gets Ctrl-C, the background server process will be killed
 trap "exit" INT TERM ERR

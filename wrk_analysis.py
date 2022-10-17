@@ -36,7 +36,7 @@ def geomean(lst):
     lst = np.array(lst)
     return np.exp(np.mean(np.log(1.0*lst)))  # 1.0* and np.log implicitly lift to lists elementwise
 
-configurations = ["stock", "spectre_sfi_aslr", "spectre_sfi_full", "spectre_cet_aslr", "spectre_cet_full"]
+configurations = ["stock", "spectre_sfi_breakout", "spectre_hfi_breakout"]
 num_configurations = len(configurations)
 metrics = ["avg_lat_microseconds", "tail_lat_microseconds", "throughput", "bin_size"]
 num_metrics = len(metrics)
@@ -57,6 +57,10 @@ def latex_name_of_config(config):
         return "\\sysDesignTwo ASLR"
     elif config == "spectre_cet_full":
         return "\\sysDesignTwo Det"
+    elif config == "spectre_sfi_breakout":
+        return "Swivel-SFI"
+    elif config == "spectre_hfi_breakout":
+        return "HFI"
     else:
         return config.replace('_', '\_')
 
