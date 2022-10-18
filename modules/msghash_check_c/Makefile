@@ -12,7 +12,7 @@ build: ../msghash_check_c$(WASM_OUT_SUFFIX).wasm
 	tar -xf ./libsodium.tar.xz
 
 ../msghash_check_c$(WASM_OUT_SUFFIX).wasm: msghash_check.cpp ./libsodium/Makefile
-	cd libsodium && $(MAKE)
+	# cd libsodium && $(MAKE)
 	$(WASM_CC)++ $(WASM_CFLAGS) msghash_check.cpp -I libsodium/src/libsodium/include libsodium/src/libsodium/.libs/libsodium.a -o $@
 
 ./native/app: msghash_check.cpp
